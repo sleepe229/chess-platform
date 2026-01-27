@@ -1,0 +1,165 @@
+package com.chess.auth.exception;
+
+import com.chess.common.dto.ErrorResponse;
+import com.chess.common.exception.*;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(
+            NotFoundException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Not found: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Validation error: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .details(ex.getDetails())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+
+        Map<String, String> fieldErrors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            fieldErrors.put(fieldName, errorMessage);
+        });
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error("VALIDATION_ERROR")
+                .message("Invalid request parameters")
+                .traceId(traceId)
+                .details(fieldErrors)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(
+            UnauthorizedException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Unauthorized: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(
+            ForbiddenException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Forbidden: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(
+            ConflictException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Conflict: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.warn("Business error: {} [traceId={}]", ex.getMessage(), traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error(ex.getCode())
+                .message(ex.getMessage())
+                .traceId(traceId)
+                .details(ex.getDetails())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        log.error("Unexpected error [traceId={}]", traceId, ex);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error("INTERNAL_SERVER_ERROR")
+                .message("An unexpected error occurred")
+                .traceId(traceId)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+}

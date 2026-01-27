@@ -1,13 +1,13 @@
-package com.chess.auth;
+package com.chess.events;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ChessAuthServiceApplication {
+public class ChessEventContracctApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ChessAuthServiceApplication.class, args);
+        SpringApplication.run(ChessEventContracctApplication.class, args);
     }
 
 }

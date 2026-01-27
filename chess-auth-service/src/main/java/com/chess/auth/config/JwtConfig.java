@@ -1,5 +1,6 @@
-package com.chess.gateway.config;
+package com.chess.auth.config;
 
+import com.chess.auth.constants.JwtConstants;
 import com.chess.common.security.JwtTokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,8 +14,8 @@ public class JwtConfig {
     @Bean
     public JwtTokenProvider jwtTokenProvider(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-validity-ms:900000}") long accessTokenValidityMs,
-            @Value("${jwt.refresh-token-validity-ms:2592000000}") long refreshTokenValidityMs) {
+            @Value("${jwt.access-token-validity-ms:" + JwtConstants.ACCESS_TOKEN_VALIDITY_MS + "}") long accessTokenValidityMs,
+            @Value("${jwt.refresh-token-validity-ms:" + JwtConstants.REFRESH_TOKEN_VALIDITY_MS + "}") long refreshTokenValidityMs) {
 
         // Validate JWT secret
         if (secret == null || secret.trim().isEmpty()) {
