@@ -20,12 +20,12 @@
         <module>chess-api-gateway</module>
 
         <!-- Core Services -->
-        <!--<module>chess-auth-service</module>-->
-        <!--<module>chess-user-service</module>-->
-        <!--<module>chess-matchmaking-service</module>-->
-        <!--<module>chess-game-service</module>-->
-        <!--<module>chess-ws-service</module>-->
-        <!--<module>chess-analytics-service</module>-->
+        <module>chess-auth-service</module>
+        <module>chess-user-service</module>
+        <module>chess-matchmaking-service</module>
+        <module>chess-game-service</module>
+        <module>chess-ws-service</module>
+        <module>chess-analytics-service</module>
     </modules>
 
     <properties>

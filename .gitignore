@@ -68,3 +68,6 @@ secrets.yml
 .git-hooks/
 node_modules
 /.kotlin/
+
+.env
+amplicode.xml
