@@ -1,10 +1,10 @@
-package com.chess.common;
+package com.chess.gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ChessCommonApplicationTests {
+class GatewayApplicationTests {
 
     @Test
     void contextLoads() {
