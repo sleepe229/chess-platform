@@ -1,10 +1,10 @@
 package com.chess.gateway.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper; // Изменено!
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
@@ -44,19 +44,14 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        try {
-            byte[] bytes = objectMapper.writeValueAsString(errorResponse).getBytes(StandardCharsets.UTF_8);
-            DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
-            return exchange.getResponse().writeWith(Mono.just(buffer));
-        } catch (JsonProcessingException e) {
-            log.error("Error serializing error response", e);
-            return exchange.getResponse().setComplete();
-        }
+        byte[] bytes = jsonMapper.writeValueAsBytes(errorResponse); // Изменено!
+        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+        return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 
     private HttpStatus determineHttpStatus(Throwable ex) {
         if (ex instanceof ResponseStatusException) {
-            return ((ResponseStatusException) ex).getStatusCode();
+            return (HttpStatus) ((ResponseStatusException) ex).getStatusCode();
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }

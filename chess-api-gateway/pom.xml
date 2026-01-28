@@ -24,11 +24,14 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Cloud Gateway с явной версией -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
-            <version>${spring-cloud-gateway.version}</version>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
         </dependency>
 
         <!-- Reactive Redis for Rate Limiting -->
