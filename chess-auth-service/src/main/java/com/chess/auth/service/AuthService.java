@@ -8,7 +8,9 @@ import com.chess.auth.messaging.AuthEventPublisher;
 import com.chess.auth.repo.RefreshTokenRepository;
 import com.chess.auth.repo.UserRepository;
 import com.chess.common.exception.ConflictException;
+import com.chess.common.exception.NotFoundException;
 import com.chess.common.exception.UnauthorizedException;
+import com.chess.common.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +28,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final AuthEventPublisher eventPublisher;
 
@@ -76,8 +78,8 @@ public class AuthService {
             throw new UnauthorizedException("Invalid email or password");
         }
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getRoles());
-        String refreshTokenValue = jwtService.generateRefreshToken(user.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRoles());
+        String refreshTokenValue = jwtTokenProvider.generateRefreshToken(user.getId());
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user, refreshTokenValue);
 
@@ -87,7 +89,7 @@ public class AuthService {
                 .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshTokenValue)
-                .expiresIn(jwtService.getAccessTokenValiditySeconds())
+                .expiresIn(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
                 .build();
     }
 
@@ -100,14 +102,12 @@ public class AuthService {
 
         log.debug("Refreshing tokens for userId: {}", user.getId());
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getRoles());
-        String newRefreshTokenValue = jwtService.generateRefreshToken(user.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getRoles());
+        String newRefreshTokenValue = jwtTokenProvider.generateRefreshToken(user.getId());
 
-        // Revoke старый refresh token
         refreshToken.revoke();
         refreshTokenRepository.save(refreshToken);
 
-        // Создаем новый refresh token
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user, newRefreshTokenValue);
 
         log.info("Tokens refreshed successfully for userId: {}", user.getId());
@@ -116,7 +116,7 @@ public class AuthService {
                 .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(newRefreshTokenValue)
-                .expiresIn(jwtService.getAccessTokenValiditySeconds())
+                .expiresIn(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
                 .build();
     }
 
@@ -140,6 +140,6 @@ public class AuthService {
     @Transactional(readOnly = true)
     public User getUserById(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User", userId));
     }
 }

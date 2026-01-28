@@ -16,8 +16,6 @@
     <name>Chess Common Library</name>
 
     <dependencies>
-        <!-- НЕ ДОБАВЛЯЕМ spring-boot-starter-web! -->
-
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

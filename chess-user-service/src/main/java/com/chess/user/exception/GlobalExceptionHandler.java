@@ -1,4 +1,4 @@
-package com.chess.auth.exception;
+package com.chess.user.exception;
 
 import com.chess.common.dto.ErrorResponse;
 import com.chess.common.exception.*;
@@ -8,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,9 +65,15 @@ public class GlobalExceptionHandler {
 
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
-            String key = error instanceof FieldError fe ? fe.getField() : error.getObjectName();
-            fieldErrors.put(key, error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid");
+            String key;
+            if (error instanceof FieldError) {
+                key = ((FieldError) error).getField();
+            } else {
+                key = error.getObjectName();
+            }
 
+            String message = error.getDefaultMessage();
+            fieldErrors.put(key, message != null ? message : "Invalid value");
         });
 
         ErrorResponse error = ErrorResponse.builder()
@@ -73,6 +81,30 @@ public class GlobalExceptionHandler {
                 .message("Invalid request parameters")
                 .traceId(traceId)
                 .details(fieldErrors)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+
+        String traceId = request.getHeader("X-Request-Id");
+        String message = ex.getName() != null
+                ? String.format("Parameter '%s' has invalid value", ex.getName())
+                : "Invalid parameter value";
+        if (ex.getRequiredType() != null && ex.getRequiredType().getSimpleName().equals("UUID")) {
+            message = "Invalid UUID format";
+        }
+        log.warn("Type mismatch: {} [traceId={}]", message, traceId);
+
+        ErrorResponse error = ErrorResponse.builder()
+                .error("INVALID_PARAMETER")
+                .message(message)
+                .traceId(traceId)
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
