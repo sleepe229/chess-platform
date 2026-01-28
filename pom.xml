@@ -41,8 +41,9 @@
         <spring.cloud.version>2025.1.0</spring.cloud.version>
 
         <!-- Database & Cache -->
-        <postgresql.version>42.7.4</postgresql.version>
-        <flyway.version>11.1.0</flyway.version>
+        <postgresql.version>42.7.7</postgresql.version>
+        <flyway.version>11.13.2</flyway.version>
+
 
         <!-- Messaging -->
         <nats.version>2.25.1</nats.version>
