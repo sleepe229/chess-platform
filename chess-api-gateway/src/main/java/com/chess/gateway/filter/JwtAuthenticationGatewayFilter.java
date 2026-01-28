@@ -8,11 +8,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +30,9 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
             "/auth/register",
             "/auth/login",
             "/auth/refresh",
+            "/v1/auth/register",
+            "/v1/auth/login",
+            "/v1/auth/refresh",
             "/actuator"
     );
 
@@ -44,20 +50,21 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
         // Проверяем наличие и валидность токена
         if (!StringUtils.hasText(jwt)) {
             log.warn("Missing JWT token for path: {}", path);
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return replyUnauthorized(exchange, "Missing or invalid token");
         }
 
         if (!tokenProvider.validateToken(jwt)) {
             log.warn("Invalid JWT token for path: {}", path);
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return replyUnauthorized(exchange, "Invalid or expired token");
         }
 
         try {
-            // Извлекаем данные из токена
+            // Извлекаем данные из токена (access token; roles может отсутствовать в старых токенах)
             UUID userId = tokenProvider.getUserIdFromToken(jwt);
             List<String> roles = tokenProvider.getRolesFromToken(jwt);
+            if (roles == null) {
+                roles = Collections.emptyList();
+            }
 
             // Добавляем headers для downstream сервисов
             ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
@@ -71,8 +78,7 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
 
         } catch (Exception ex) {
             log.error("Error processing JWT", ex);
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return replyUnauthorized(exchange, "Invalid token");
         }
     }
 
@@ -88,5 +94,19 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
         }
 
         return null;
+    }
+
+    private Mono<Void> replyUnauthorized(ServerWebExchange exchange, String message) {
+        String traceId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
+        String body = String.format(
+                "{\"error\":\"UNAUTHORIZED\",\"message\":\"%s\",\"traceId\":%s}",
+                message.replace("\"", "\\\""),
+                traceId != null ? "\"" + traceId + "\"" : "null"
+        );
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        return exchange.getResponse().writeWith(
+                Mono.just(exchange.getResponse().bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8)))
+        );
     }
 }

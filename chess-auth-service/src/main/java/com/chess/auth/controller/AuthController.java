@@ -2,6 +2,12 @@ package com.chess.auth.controller;
 
 import com.chess.auth.dto.*;
 import com.chess.auth.service.AuthService;
+import com.chess.common.security.SecurityUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,10 +75,13 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @AuthenticationPrincipal UUID userId,
+            @AuthenticationPrincipal SecurityUser user,
             @Valid @RequestBody(required = false) LogoutRequest request) {
-        log.info("POST /auth/logout - userId: {}", userId);
-        authService.logout(userId, request);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        log.info("POST /auth/logout - userId: {}", user.getUserId());
+        authService.logout(user.getUserId(), request);
         return ResponseEntity.noContent().build();
     }
 }

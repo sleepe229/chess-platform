@@ -73,23 +73,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private boolean checkRateLimit(String key, int maxRequests, int windowSeconds) {
         try {
-            String countStr = redisTemplate.opsForValue().get(key);
-            int count = countStr == null ? 0 : Integer.parseInt(countStr);
-
-            if (count >= maxRequests) {
-                return false;
+            Long count = redisTemplate.opsForValue().increment(key);
+            if (count == null) {
+                count = 1L;
             }
-
-            if (count == 0) {
-                redisTemplate.opsForValue().set(key, "1", windowSeconds, TimeUnit.SECONDS);
-            } else {
-                redisTemplate.opsForValue().increment(key);
+            if (count == 1) {
+                redisTemplate.expire(key, windowSeconds, TimeUnit.SECONDS);
             }
-
-            return true;
+            return count <= maxRequests;
         } catch (Exception e) {
             log.error("Error checking rate limit for key: {}", key, e);
-            // On error, allow the request to proceed (fail open)
             return true;
         }
     }
