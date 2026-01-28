@@ -142,7 +142,7 @@ class RatingTest {
 
         @Test
         @DisplayName("Should have default volatility of 0.06")
-        void shouldHaveDefaultVolatilityOf006() {
+        void shouldHaveDefaultVolatilityOfPointZeroSix() {
             Rating rating = Rating.builder()
                     .id(UUID.randomUUID())
                     .userId(UUID.randomUUID())

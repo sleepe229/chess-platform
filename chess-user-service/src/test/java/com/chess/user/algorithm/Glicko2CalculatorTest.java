@@ -286,11 +286,11 @@ class Glicko2CalculatorTest {
     }
 
     @Nested
-    @DisplayName("RatingResult Builder Tests")
-    class RatingResultBuilderTests {
+    @DisplayName("RatingResult Tests")
+    class RatingResultTests {
 
         @Test
-        @DisplayName("Should create RatingResult with builder")
+        @DisplayName("Should create RatingResult with builder and allow property access")
         void shouldCreateRatingResultWithBuilder() {
             RatingResult result = RatingResult.builder()
                     .rating(1500.0)
@@ -304,23 +304,21 @@ class Glicko2CalculatorTest {
         }
 
         @Test
-        @DisplayName("Should create RatingResult with all args constructor")
-        void shouldCreateRatingResultWithAllArgsConstructor() {
-            RatingResult result = new RatingResult(1500.0, 200.0, 0.06);
+        @DisplayName("Should allow setting properties after construction")
+        void shouldAllowSettingPropertiesAfterConstruction() {
+            RatingResult result = RatingResult.builder()
+                    .rating(1500.0)
+                    .ratingDeviation(200.0)
+                    .volatility(0.06)
+                    .build();
 
-            assertThat(result.getRating()).isEqualTo(1500.0);
-            assertThat(result.getRatingDeviation()).isEqualTo(200.0);
-            assertThat(result.getVolatility()).isEqualTo(0.06);
-        }
+            result.setRating(1600.0);
+            result.setRatingDeviation(180.0);
+            result.setVolatility(0.055);
 
-        @Test
-        @DisplayName("Should create RatingResult with no args constructor")
-        void shouldCreateRatingResultWithNoArgsConstructor() {
-            RatingResult result = new RatingResult();
-
-            assertThat(result.getRating()).isEqualTo(0.0);
-            assertThat(result.getRatingDeviation()).isEqualTo(0.0);
-            assertThat(result.getVolatility()).isEqualTo(0.0);
+            assertThat(result.getRating()).isEqualTo(1600.0);
+            assertThat(result.getRatingDeviation()).isEqualTo(180.0);
+            assertThat(result.getVolatility()).isEqualTo(0.055);
         }
     }
 }
