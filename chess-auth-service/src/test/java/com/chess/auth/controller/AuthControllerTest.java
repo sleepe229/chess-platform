@@ -71,10 +71,9 @@ class AuthControllerTest {
                     .password("pass")
                     .build();
             AuthResponse responseBody = AuthResponse.builder()
-                    .userId(USER_ID)
                     .accessToken("access")
                     .refreshToken("refresh")
-                    .expiresIn(900L)
+                    .expiresInSeconds(900L)
                     .build();
             when(authService.login(request)).thenReturn(responseBody);
 
@@ -82,7 +81,7 @@ class AuthControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getUserId()).isEqualTo(USER_ID);
+            assertThat(response.getBody().getExpiresInSeconds()).isEqualTo(900L);
             verify(authService).login(request);
         }
     }
@@ -95,10 +94,9 @@ class AuthControllerTest {
         void returns200AndAuthResponse() {
             RefreshTokenRequest request = RefreshTokenRequest.builder().refreshToken("refresh-token").build();
             AuthResponse responseBody = AuthResponse.builder()
-                    .userId(USER_ID)
                     .accessToken("new-access")
                     .refreshToken("new-refresh")
-                    .expiresIn(900L)
+                    .expiresInSeconds(900L)
                     .build();
             when(authService.refresh(request)).thenReturn(responseBody);
 

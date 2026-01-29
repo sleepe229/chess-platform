@@ -36,12 +36,13 @@ public class MatchmakingEventPublisher {
             }
 
             MatchFoundEvent event = MatchFoundEvent.builder()
-                    .matchId(dto.getMatchId())
+                    .gameId(dto.getMatchId())
                     .whitePlayerId(dto.getWhitePlayerId())
                     .blackPlayerId(dto.getBlackPlayerId())
-                    .timeControl(dto.getTimeControl())
-                    .initialTimeSeconds(dto.getInitialTimeSeconds())
+                    .timeControlType(dto.getTimeControl())
+                    .baseSeconds(dto.getInitialTimeSeconds())
                     .incrementSeconds(dto.getIncrementSeconds())
+                    .rated(dto.getRated())
                     .build();
             EventBuilder.enrichEvent(event, PRODUCER);
 

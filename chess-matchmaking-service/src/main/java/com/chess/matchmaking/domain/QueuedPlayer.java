@@ -16,4 +16,5 @@ public class QueuedPlayer {
     private Double rating;
     private Double ratingDeviation;
     private Long queueTime;
+    private Boolean rated;
 }

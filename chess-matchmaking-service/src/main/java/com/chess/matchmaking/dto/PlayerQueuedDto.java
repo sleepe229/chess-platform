@@ -15,4 +15,5 @@ public class PlayerQueuedDto {
     private String timeControl;
     private Double rating;
     private Double ratingDeviation;
+    private Boolean rated;
 }

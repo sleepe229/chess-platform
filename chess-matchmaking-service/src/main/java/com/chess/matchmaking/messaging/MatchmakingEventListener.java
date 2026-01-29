@@ -79,14 +79,15 @@ public class MatchmakingEventListener {
     }
 
     private void handlePlayerQueued(PlayerQueuedEvent event) {
-        log.info("Received PlayerQueued event: userId={}, timeControl={}, rating={}",
-                event.getUserId(), event.getTimeControl(), event.getRating());
+        log.info("Received PlayerQueued event: userId={}, timeControlType={}, rating={}, rated={}",
+                event.getUserId(), event.getTimeControlType(), event.getRating(), event.getRated());
 
         PlayerQueuedDto dto = PlayerQueuedDto.builder()
                 .userId(event.getUserId())
-                .timeControl(event.getTimeControl())
+                .timeControl(event.getTimeControlType())
                 .rating(event.getRating())
                 .ratingDeviation(event.getRatingDeviation())
+                .rated(event.getRated())
                 .build();
 
         Exception lastException = null;

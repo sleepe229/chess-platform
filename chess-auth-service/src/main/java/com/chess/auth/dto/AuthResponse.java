@@ -13,8 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuthResponse {
 
-    private UUID userId;
     private String accessToken;
     private String refreshToken;
-    private Long expiresIn;
+    private Long expiresInSeconds;
 }

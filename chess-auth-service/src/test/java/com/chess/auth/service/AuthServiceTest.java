@@ -39,7 +39,7 @@ class AuthServiceTest {
     private static final String PASSWORD = "Password1!";
     private static final String ACCESS_TOKEN = "access-token";
     private static final String REFRESH_TOKEN_VALUE = "refresh-token";
-    private static final long EXPIRES_IN = 900L;
+    private static final long EXPIRES_IN_SECONDS = 900L;
 
     @Mock
     private UserRepository userRepository;
@@ -153,15 +153,14 @@ class AuthServiceTest {
             when(passwordEncoder.matches(PASSWORD, "encoded")).thenReturn(true);
             when(jwtTokenProvider.generateAccessToken(USER_ID, user.getRoles())).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.generateRefreshToken(USER_ID)).thenReturn(REFRESH_TOKEN_VALUE);
-            when(jwtTokenProvider.getAccessTokenValidityMs()).thenReturn(EXPIRES_IN * 1000L);
+            when(jwtTokenProvider.getAccessTokenValidityMs()).thenReturn(EXPIRES_IN_SECONDS * 1000L);
             when(refreshTokenService.createRefreshToken(eq(user), eq(REFRESH_TOKEN_VALUE))).thenReturn(refreshToken);
 
             AuthResponse response = authService.login(request);
 
-            assertThat(response.getUserId()).isEqualTo(USER_ID);
             assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(response.getRefreshToken()).isEqualTo(REFRESH_TOKEN_VALUE);
-            assertThat(response.getExpiresIn()).isEqualTo(EXPIRES_IN);
+            assertThat(response.getExpiresInSeconds()).isEqualTo(EXPIRES_IN_SECONDS);
         }
 
         @Test
@@ -203,12 +202,11 @@ class AuthServiceTest {
             when(refreshTokenService.validateRefreshToken(REFRESH_TOKEN_VALUE)).thenReturn(refreshToken);
             when(jwtTokenProvider.generateAccessToken(USER_ID, user.getRoles())).thenReturn(ACCESS_TOKEN);
             when(jwtTokenProvider.generateRefreshToken(USER_ID)).thenReturn(newRefreshValue);
-            when(jwtTokenProvider.getAccessTokenValidityMs()).thenReturn(EXPIRES_IN * 1000L);
+            when(jwtTokenProvider.getAccessTokenValidityMs()).thenReturn(EXPIRES_IN_SECONDS * 1000L);
             when(refreshTokenService.createRefreshToken(eq(user), eq(newRefreshValue))).thenReturn(refreshToken);
 
             AuthResponse response = authService.refresh(request);
 
-            assertThat(response.getUserId()).isEqualTo(USER_ID);
             assertThat(response.getAccessToken()).isEqualTo(ACCESS_TOKEN);
             assertThat(response.getRefreshToken()).isEqualTo(newRefreshValue);
             verify(refreshTokenRepository).save(refreshToken);

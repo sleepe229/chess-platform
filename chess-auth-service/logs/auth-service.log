@@ -3884,3 +3884,14 @@ Caused by: org.postgresql.util.PSQLException: FATAL: database "chess_auth" does 
 2026-01-29 13:28:20 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
 2026-01-29 13:28:20 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
 2026-01-29 13:28:20 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.755 seconds (process running for 1.451)
+2026-01-29 20:26:42 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 63269 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-01-29 20:26:42 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-01-29 20:26:42 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-01-29 20:26:42 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.317 seconds (process running for 1.877)
+2026-01-29 20:26:42 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 2483277c-038e-47f1-bb41-a0c30348beba
+2026-01-29 20:26:42 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 2483277c-038e-47f1-bb41-a0c30348beba
+2026-01-29 20:26:42 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 2483277c-038e-47f1-bb41-a0c30348beba
+2026-01-29 20:26:42 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: f1c91ce2-0713-48cd-a056-65449ba5cb3a
+2026-01-29 20:26:42 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-01-29 20:26:42 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-01-29 20:26:42 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh

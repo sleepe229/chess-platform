@@ -17,14 +17,26 @@ import lombok.experimental.SuperBuilder;
 public class PlayerQueuedEvent extends DomainEvent {
 
     @NotBlank
+    private String requestId;
+
+    @NotBlank
     private String userId;
 
     @NotBlank
-    private String timeControl;
+    private String timeControlType;
+
+    @NotNull
+    private Integer baseSeconds;
+
+    @NotNull
+    private Integer incrementSeconds;
+
+    @NotNull
+    private Boolean rated;
 
     @NotNull
     private Double rating;
-
+    
     @NotNull
     private Double ratingDeviation;
 

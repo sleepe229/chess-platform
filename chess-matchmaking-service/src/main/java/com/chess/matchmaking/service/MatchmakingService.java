@@ -29,6 +29,7 @@ public class MatchmakingService {
     private final Map<String, Integer> playerRanges = new ConcurrentHashMap<>();
     private final Map<String, Double> playerRatings = new ConcurrentHashMap<>();
     private final Map<String, String> playerTimeControls = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> playerRated = new ConcurrentHashMap<>();
 
     public void onPlayerQueued(PlayerQueuedDto dto) {
         String userId = dto.getUserId();
@@ -43,6 +44,7 @@ public class MatchmakingService {
                 .timeControl(timeControl)
                 .rating(rating)
                 .ratingDeviation(ratingDeviation)
+                .rated(dto.getRated())
                 .build());
 
         String k = key(userId, timeControl);
@@ -50,6 +52,7 @@ public class MatchmakingService {
         playerRanges.put(k, properties.getInitialRatingRange());
         playerRatings.put(k, rating);
         playerTimeControls.put(k, timeControl);
+        playerRated.put(k, dto.getRated() != null ? dto.getRated() : true);
 
         FindMatchRequest findRequest = FindMatchRequest.builder()
                 .userId(userId)
@@ -74,6 +77,7 @@ public class MatchmakingService {
         playerRanges.remove(k);
         playerRatings.remove(k);
         playerTimeControls.remove(k);
+        playerRated.remove(k);
     }
 
     @Scheduled(fixedDelayString = "${matchmaking.range-expansion-interval-seconds:10}000")
@@ -134,6 +138,7 @@ public class MatchmakingService {
             playerRanges.remove(k);
             playerRatings.remove(k);
             playerTimeControls.remove(k);
+            playerRated.remove(k);
             return;
         }
 
@@ -151,6 +156,8 @@ public class MatchmakingService {
                 blackPlayerId = userId;
             }
 
+            Boolean isRated = getRatedForPlayers(userId, opponent.getUserId(), timeControl);
+            
             MatchFoundDto matchFoundDto = MatchFoundDto.builder()
                     .matchId(matchId)
                     .whitePlayerId(whitePlayerId)
@@ -158,6 +165,7 @@ public class MatchmakingService {
                     .timeControl(timeControl)
                     .initialTimeSeconds(initialTimeSeconds)
                     .incrementSeconds(incrementSeconds)
+                    .rated(isRated)
                     .build();
             try {
                 eventPublisher.publishMatchFound(matchFoundDto);
@@ -171,10 +179,20 @@ public class MatchmakingService {
             playerRanges.remove(k1);
             playerRatings.remove(k1);
             playerTimeControls.remove(k1);
+            playerRated.remove(k1);
             playerQueueTimes.remove(k2);
             playerRanges.remove(k2);
             playerRatings.remove(k2);
             playerTimeControls.remove(k2);
+            playerRated.remove(k2);
         }
+    }
+
+    private Boolean getRatedForPlayers(String userId1, String userId2, String timeControl) {
+        String k1 = key(userId1, timeControl);
+        String k2 = key(userId2, timeControl);
+        Boolean rated1 = playerRated.getOrDefault(k1, true);
+        Boolean rated2 = playerRated.getOrDefault(k2, true);
+        return rated1 != null && rated1 && rated2 != null && rated2;
     }
 }

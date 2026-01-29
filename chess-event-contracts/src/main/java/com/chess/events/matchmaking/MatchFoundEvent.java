@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 public class MatchFoundEvent extends DomainEvent {
 
     @NotBlank
-    private String matchId;
+    private String gameId;
 
     @NotBlank
     private String whitePlayerId;
@@ -26,16 +26,18 @@ public class MatchFoundEvent extends DomainEvent {
     private String blackPlayerId;
 
     @NotBlank
-    private String timeControl;
+    private String timeControlType;
 
     @NotNull
-    private Integer initialTimeSeconds;
+    private Integer baseSeconds;
 
     @NotNull
     private Integer incrementSeconds;
 
+    private Boolean rated;
+
     @Override
     public String getAggregateId() {
-        return matchId;
+        return gameId;
     }
 }

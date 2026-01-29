@@ -17,4 +17,5 @@ public class MatchFoundDto {
     private String timeControl;
     private int initialTimeSeconds;
     private int incrementSeconds;
+    private Boolean rated;
 }
