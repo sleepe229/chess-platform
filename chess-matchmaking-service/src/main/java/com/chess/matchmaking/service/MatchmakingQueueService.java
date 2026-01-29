@@ -62,11 +62,6 @@ public class MatchmakingQueueService {
         log.debug("Player {} removed from queue for timeControl {}", userId, timeControl);
     }
 
-    /**
-     * Атомарно ищет соперника в диапазоне рейтинга и удаляет обоих из пула
-     * (Lua-скрипт).
-     * Один round-trip к Redis, полная атомарность без гонок.
-     */
     @SuppressWarnings("unchecked")
     public QueuedPlayer findMatchForPlayer(String userId, String timeControl, Double rating, int range) {
         String queueKey = queueKey(timeControl);
