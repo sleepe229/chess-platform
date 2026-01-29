@@ -8,9 +8,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ratings", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "time_control"})
-})
+@Table(
+        name = "ratings",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "time_control"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,16 +41,16 @@ public class Rating {
     @Builder.Default
     private Double volatility = 0.06;
 
-    @Column(name = "games_played")
+    @Column(name = "games_played", nullable = false)
     @Builder.Default
     private Integer gamesPlayed = 0;
 
-    @Column(name = "peak_rating")
+    @Column(name = "peak_rating", nullable = false)
     @Builder.Default
     private Double peakRating = 1500.0;
 
     @UpdateTimestamp
-    @Column(nullable = false, name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     public void updateRating(Double newRating, Double newRd, Double newVolatility) {
