@@ -1,25 +1,17 @@
 package com.chess.matchmaking.service;
 
-import com.chess.event.MatchFoundEvent;
-import com.chess.event.PlayerLeftQueueEvent;
-import com.chess.event.PlayerSearchingOpponentEvent;
+import com.chess.events.matchmaking.PlayerDequeuedEvent;
+import com.chess.events.matchmaking.PlayerQueuedEvent;
+import com.chess.matchmaking.config.MatchmakingProperties;
 import com.chess.matchmaking.model.QueuedPlayer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nats.client.JetStream;
-import io.nats.client.JetStreamSubscription;
-import io.nats.client.Message;
-import io.nats.client.PushSubscribeOptions;
+import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -27,230 +19,137 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class MatchmakingService {
 
-    private static final int INITIAL_RATING_RANGE = 100;
-    private static final int RATING_RANGE_INCREMENT = 50;
-    private static final int MAX_RATING_RANGE = 500;
-    private static final long RANGE_EXPANSION_INTERVAL_SECONDS = 10;
-
-    @Value("${nats.stream.name:chess-events}")
-    private String streamName;
-
-    @Value("${nats.subject.player.searching:chess.matchmaking.player.searching}")
-    private String playerSearchingSubject;
-
-    @Value("${nats.subject.player.left:chess.matchmaking.player.left}")
-    private String playerLeftSubject;
-
-    @Value("${nats.subject.match.found:chess.matchmaking.match.found}")
-    private String matchFoundSubject;
-
-    private final JetStream jetStream;
     private final MatchmakingQueueService queueService;
-    private final ObjectMapper objectMapper;
+    private final MatchmakingEventPublisher eventPublisher;
+    private final MatchmakingProperties properties;
 
-    // Хранит информацию о времени добавления игрока в очередь для расширения
-    // диапазона
     private final Map<String, Long> playerQueueTimes = new ConcurrentHashMap<>();
-    // Хранит текущий диапазон поиска для каждого игрока
     private final Map<String, Integer> playerRanges = new ConcurrentHashMap<>();
-    // Хранит рейтинг игроков для быстрого доступа
-    private final Map<String, Integer> playerRatings = new ConcurrentHashMap<>();
+    private final Map<String, Double> playerRatings = new ConcurrentHashMap<>();
+    private final Map<String, String> playerTimeControls = new ConcurrentHashMap<>();
 
-    private JetStreamSubscription playerSearchingSubscription;
-    private JetStreamSubscription playerLeftSubscription;
+    public void onPlayerQueued(PlayerQueuedEvent event) {
+        String userId = event.getUserId();
+        String timeControl = event.getTimeControl();
+        Double rating = event.getRating() != null ? event.getRating() : 0.0;
+        Double ratingDeviation = event.getRatingDeviation();
 
-    @PostConstruct
-    public void init() throws IOException {
-        // Подписываемся на события поиска соперника
-        PushSubscribeOptions searchingOptions = PushSubscribeOptions.builder()
-                .durable("matchmaking-service-searching")
-                .build();
+        log.info("Adding player to queue: userId={}, timeControl={}, rating={}", userId, timeControl, rating);
 
-        playerSearchingSubscription = jetStream.subscribe(
-                playerSearchingSubject,
-                searchingOptions,
-                this::handlePlayerSearchingEvent);
-        log.info("Subscribed to NATS subject: {}", playerSearchingSubject);
+        queueService.addPlayerToQueue(userId, timeControl, rating, ratingDeviation);
 
-        // Подписываемся на события выхода из очереди
-        PushSubscribeOptions leftOptions = PushSubscribeOptions.builder()
-                .durable("matchmaking-service-left")
-                .build();
+        String k = key(userId, timeControl);
+        playerQueueTimes.put(k, System.currentTimeMillis());
+        playerRanges.put(k, properties.getInitialRatingRange());
+        playerRatings.put(k, rating);
+        playerTimeControls.put(k, timeControl);
 
-        playerLeftSubscription = jetStream.subscribe(
-                playerLeftSubject,
-                leftOptions,
-                this::handlePlayerLeftEvent);
-        log.info("Subscribed to NATS subject: {}", playerLeftSubject);
-        log.info("Matchmaking scheduler will run every {} seconds", RANGE_EXPANSION_INTERVAL_SECONDS);
+        int range = properties.getInitialRatingRange();
+        processPlayerMatchmaking(userId, timeControl, rating, range);
     }
 
-    @PreDestroy
-    public void cleanup() {
-        if (playerSearchingSubscription != null) {
-            try {
-                playerSearchingSubscription.unsubscribe();
-            } catch (Exception e) {
-                log.error("Error unsubscribing from player searching NATS", e);
-            }
-        }
-        if (playerLeftSubscription != null) {
-            try {
-                playerLeftSubscription.unsubscribe();
-            } catch (Exception e) {
-                log.error("Error unsubscribing from player left NATS", e);
-            }
-        }
+    public void onPlayerDequeued(PlayerDequeuedEvent event) {
+        String userId = event.getUserId();
+        String timeControl = event.getTimeControl();
+
+        log.info("Removing player from queue: userId={}, timeControl={}, reason={}",
+                userId, timeControl, event.getReason());
+
+        queueService.removePlayerFromQueue(userId, timeControl);
+
+        String k = key(userId, timeControl);
+        playerQueueTimes.remove(k);
+        playerRanges.remove(k);
+        playerRatings.remove(k);
+        playerTimeControls.remove(k);
     }
 
-    /**
-     * Обрабатывает событие поиска соперника.
-     */
-    private void handlePlayerSearchingEvent(Message msg) {
-        try {
-            String messageBody = new String(msg.getData(), StandardCharsets.UTF_8);
-            PlayerSearchingOpponentEvent event = objectMapper.readValue(messageBody,
-                    PlayerSearchingOpponentEvent.class);
-
-            log.info("Received PlayerSearchingOpponentEvent: playerId={}, rating={}",
-                    event.playerId(), event.rating());
-
-            // Добавляем игрока в очередь
-            queueService.addPlayerToQueue(event.playerId(), event.rating());
-
-            // Инициализируем диапазон поиска и сохраняем рейтинг
-            playerQueueTimes.put(event.playerId(), System.currentTimeMillis());
-            playerRanges.put(event.playerId(), INITIAL_RATING_RANGE);
-            playerRatings.put(event.playerId(), event.rating());
-
-            // Подтверждаем обработку сообщения
-            msg.ack();
-
-            // Пытаемся сразу найти пару с начальным диапазоном
-            processPlayerMatchmaking(event.playerId(), event.rating(), INITIAL_RATING_RANGE);
-
-        } catch (Exception e) {
-            log.error("Error processing PlayerSearchingOpponentEvent", e);
-            msg.nak(); // Negative acknowledgment - сообщение будет обработано повторно
-        }
-    }
-
-    /**
-     * Обрабатывает событие выхода игрока из очереди.
-     */
-    private void handlePlayerLeftEvent(Message msg) {
-        try {
-            String messageBody = new String(msg.getData(), StandardCharsets.UTF_8);
-            PlayerLeftQueueEvent event = objectMapper.readValue(messageBody, PlayerLeftQueueEvent.class);
-
-            log.info("Received PlayerLeftQueueEvent: playerId={}", event.playerId());
-
-            // Удаляем игрока из очереди
-            queueService.removePlayerFromQueue(event.playerId());
-
-            // Удаляем из отслеживания
-            playerQueueTimes.remove(event.playerId());
-            playerRanges.remove(event.playerId());
-            playerRatings.remove(event.playerId());
-
-            // Подтверждаем обработку сообщения
-            msg.ack();
-
-        } catch (Exception e) {
-            log.error("Error processing PlayerLeftQueueEvent", e);
-            msg.nak(); // Negative acknowledgment - сообщение будет обработано повторно
-        }
-    }
-
-    /**
-     * Периодически обрабатывает матчмейкинг для всех игроков в очереди.
-     */
-    @Scheduled(fixedDelay = RANGE_EXPANSION_INTERVAL_SECONDS * 1000)
+    @Scheduled(fixedDelayString = "${matchmaking.range-expansion-interval-seconds:10}000")
     public void processMatchmaking() {
         long currentTime = System.currentTimeMillis();
+        long intervalMs = properties.getRangeExpansionIntervalSeconds() * 1000L;
 
-        // Обновляем диапазоны поиска для всех игроков
-        playerQueueTimes.forEach((playerId, queueTime) -> {
+        playerQueueTimes.forEach((k, queueTime) -> {
             long timeInQueue = currentTime - queueTime;
-            int expansions = (int) (timeInQueue / (RANGE_EXPANSION_INTERVAL_SECONDS * 1000));
+            int expansions = (int) (timeInQueue / intervalMs);
             int newRange = Math.min(
-                    INITIAL_RATING_RANGE + (expansions * RATING_RANGE_INCREMENT),
-                    MAX_RATING_RANGE);
+                    properties.getInitialRatingRange() + (expansions * properties.getRatingRangeIncrement()),
+                    properties.getMaxRatingRange());
 
-            Integer currentRange = playerRanges.get(playerId);
+            Integer currentRange = playerRanges.get(k);
             if (currentRange == null || newRange > currentRange) {
-                playerRanges.put(playerId, newRange);
-                log.debug("Expanded search range for player {} to ±{}", playerId, newRange);
+                playerRanges.put(k, newRange);
+                log.debug("Expanded search range for {} to ±{}", k, newRange);
             }
         });
 
-        // Пытаемся найти пары для всех игроков
-        playerRanges.forEach((playerId, range) -> {
-            Integer rating = playerRatings.get(playerId);
-            if (rating != null) {
-                processPlayerMatchmaking(playerId, rating, range);
+        playerRanges.forEach((k, range) -> {
+            Double rating = playerRatings.get(k);
+            String timeControl = playerTimeControls.get(k);
+            if (rating != null && timeControl != null) {
+                int colon = k.indexOf(':');
+                String userId = colon > 0 ? k.substring(colon + 1) : k;
+                processPlayerMatchmaking(userId, timeControl, rating, range);
             } else {
-                // Игрок больше не в очереди
-                playerQueueTimes.remove(playerId);
-                playerRanges.remove(playerId);
-                playerRatings.remove(playerId);
+                playerQueueTimes.remove(k);
+                playerRanges.remove(k);
+                playerRatings.remove(k);
+                playerTimeControls.remove(k);
             }
         });
     }
 
-    /**
-     * Обрабатывает матчмейкинг для конкретного игрока.
-     */
-    private void processPlayerMatchmaking(String playerId, Integer rating, Integer range) {
-        try {
-            // Проверяем, что игрок все еще в очереди
-            Double score = queueService.getPlayerRating(playerId);
-            if (score == null) {
-                // Игрок больше не в очереди
-                playerQueueTimes.remove(playerId);
-                playerRanges.remove(playerId);
-                playerRatings.remove(playerId);
-                return;
-            }
-
-            QueuedPlayer opponent = queueService.findMatchForPlayer(playerId, rating, range);
-            if (opponent != null) {
-                // Пара найдена!
-                sendMatchFoundEvent(playerId, rating, opponent.getPlayerId(), opponent.getRating());
-
-                // Удаляем обоих игроков из отслеживания
-                playerQueueTimes.remove(playerId);
-                playerRanges.remove(playerId);
-                playerRatings.remove(playerId);
-                playerQueueTimes.remove(opponent.getPlayerId());
-                playerRanges.remove(opponent.getPlayerId());
-                playerRatings.remove(opponent.getPlayerId());
-            }
-        } catch (Exception e) {
-            log.error("Error processing matchmaking for player {}", playerId, e);
-        }
+    private static String key(String userId, String timeControl) {
+        return timeControl + ":" + userId;
     }
 
-    /**
-     * Отправляет событие о найденной паре.
-     */
-    private void sendMatchFoundEvent(String player1Id, Integer player1Rating,
-            String player2Id, Integer player2Rating) {
-        try {
-            MatchFoundEvent event = new MatchFoundEvent(
-                    player1Id, player1Rating,
-                    player2Id, player2Rating);
+    private void processPlayerMatchmaking(String userId, String timeControl, Double rating, int range) {
+        Double currentRating = queueService.getPlayerRating(userId, timeControl);
+        if (currentRating == null) {
+            String k = key(userId, timeControl);
+            playerQueueTimes.remove(k);
+            playerRanges.remove(k);
+            playerRatings.remove(k);
+            playerTimeControls.remove(k);
+            return;
+        }
 
-            String eventJson = objectMapper.writeValueAsString(event);
-            byte[] eventBytes = eventJson.getBytes(StandardCharsets.UTF_8);
+        QueuedPlayer opponent = queueService.findMatchForPlayer(userId, timeControl, rating, range);
+        if (opponent != null) {
+            String matchId = UUID.randomUUID().toString();
+            MatchmakingProperties.TimeControlParams params = properties.getTimeControls().get(timeControl);
+            int initialTimeSeconds = params != null ? params.getInitialTimeSeconds() : 180;
+            int incrementSeconds = params != null ? params.getIncrementSeconds() : 2;
 
-            jetStream.publish(matchFoundSubject, eventBytes);
-            log.info("Published MatchFoundEvent: {} (rating {}) vs {} (rating {})",
-                    player1Id, player1Rating, player2Id, player2Rating);
+            String whitePlayerId = userId;
+            String blackPlayerId = opponent.getUserId();
+            if (Math.random() >= 0.5) {
+                whitePlayerId = opponent.getUserId();
+                blackPlayerId = userId;
+            }
 
-        } catch (Exception e) {
-            log.error("Error sending MatchFoundEvent", e);
-            throw new RuntimeException("Failed to send match found event", e);
+            try {
+                eventPublisher.publishMatchFound(
+                        matchId,
+                        whitePlayerId,
+                        blackPlayerId,
+                        timeControl,
+                        initialTimeSeconds,
+                        incrementSeconds);
+            } catch (Exception e) {
+                log.error("Failed to publish MatchFound event for matchId={}", matchId, e);
+            }
+
+            String k1 = key(userId, timeControl);
+            String k2 = key(opponent.getUserId(), timeControl);
+            playerQueueTimes.remove(k1);
+            playerRanges.remove(k1);
+            playerRatings.remove(k1);
+            playerTimeControls.remove(k1);
+            playerQueueTimes.remove(k2);
+            playerRanges.remove(k2);
+            playerRatings.remove(k2);
+            playerTimeControls.remove(k2);
         }
     }
 }

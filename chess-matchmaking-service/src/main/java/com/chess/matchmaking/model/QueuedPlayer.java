@@ -1,14 +1,19 @@
 package com.chess.matchmaking.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class QueuedPlayer {
-    private String playerId;
-    private Integer rating;
-    private Long queueTime; // timestamp when player joined queue
+
+    private String userId;
+    private String timeControl;
+    private Double rating;
+    private Double ratingDeviation;
+    private Long queueTime;
 }
