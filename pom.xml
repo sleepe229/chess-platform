@@ -41,8 +41,9 @@
         <spring.cloud.version>2025.1.0</spring.cloud.version>
 
         <!-- Database & Cache -->
-        <postgresql.version>42.7.4</postgresql.version>
+        <postgresql.version>42.7.7</postgresql.version>
         <flyway.version>11.13.2</flyway.version>
+
 
         <!-- Messaging -->
         <nats.version>2.25.1</nats.version>
@@ -71,7 +72,7 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Boot BOM -->
+            <!-- Spring Boot BOM (ПЕРВЫМ) -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -118,21 +119,21 @@
                 <version>${flyway.version}</version>
             </dependency>
 
-            <!-- NATS JetStream (актуальная версия 2.25.1) -->
+            <!-- NATS JetStream -->
             <dependency>
                 <groupId>io.nats</groupId>
                 <artifactId>jnats</artifactId>
                 <version>${nats.version}</version>
             </dependency>
 
-            <!-- Chess Library (версия из JitPack репозитория) -->
+            <!-- Chess Library -->
             <dependency>
                 <groupId>com.github.bhlangonijr</groupId>
                 <artifactId>chesslib</artifactId>
                 <version>${chesslib.version}</version>
             </dependency>
 
-            <!-- JWT (актуальная версия 0.12.6) -->
+            <!-- JWT -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-api</artifactId>
@@ -151,7 +152,7 @@
                 <scope>runtime</scope>
             </dependency>
 
-            <!-- Monitoring (Micrometer 1.16.2 - актуальная для Spring Boot 4.0) -->
+            <!-- Monitoring -->
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
@@ -171,7 +172,7 @@
                 <version>${mapstruct.version}</version>
             </dependency>
 
-            <!-- Testing (Testcontainers 1.21.0 - последняя версия) -->
+            <!-- Testing -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
@@ -211,7 +212,6 @@
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${mapstruct.version}</version>
                             </path>
-                            <!-- Важно: порядок имеет значение для корректной работы Lombok + MapStruct -->
                             <path>
                                 <groupId>org.projectlombok</groupId>
                                 <artifactId>lombok-mapstruct-binding</artifactId>
@@ -254,7 +254,7 @@
                     <version>${maven.surefire.plugin.version}</version>
                 </plugin>
 
-                <!-- Flyway Maven Plugin (для миграций) -->
+                <!-- Flyway Maven Plugin -->
                 <plugin>
                     <groupId>org.flywaydb</groupId>
                     <artifactId>flyway-maven-plugin</artifactId>
@@ -269,7 +269,6 @@
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
-        <!-- JitPack для chesslib -->
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
