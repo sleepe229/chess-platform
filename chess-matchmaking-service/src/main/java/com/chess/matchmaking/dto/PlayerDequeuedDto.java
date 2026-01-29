@@ -1,4 +1,4 @@
-package com.chess.matchmaking.model;
+package com.chess.matchmaking.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueuedPlayer {
+public class PlayerDequeuedDto {
 
     private String userId;
     private String timeControl;
-    private Double rating;
-    private Double ratingDeviation;
-    private Long queueTime;
+    private String reason;
 }

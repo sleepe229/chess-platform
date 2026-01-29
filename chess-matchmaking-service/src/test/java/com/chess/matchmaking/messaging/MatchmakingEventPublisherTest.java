@@ -1,5 +1,6 @@
 package com.chess.matchmaking.messaging;
 
+import com.chess.matchmaking.dto.MatchFoundDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,15 @@ class MatchmakingEventPublisherTest {
         void doesNotPublishWhenConnectionIsNull() {
             ReflectionTestUtils.setField(publisher, "natsConnection", null);
 
-            publisher.publishMatchFound(MATCH_ID, WHITE_ID, BLACK_ID, TIME_CONTROL, INITIAL_TIME, INCREMENT);
+            MatchFoundDto dto = MatchFoundDto.builder()
+                    .matchId(MATCH_ID)
+                    .whitePlayerId(WHITE_ID)
+                    .blackPlayerId(BLACK_ID)
+                    .timeControl(TIME_CONTROL)
+                    .initialTimeSeconds(INITIAL_TIME)
+                    .incrementSeconds(INCREMENT)
+                    .build();
+            publisher.publishMatchFound(dto);
 
             verify(natsConnection, never()).publish(any(), any(byte[].class));
         }
@@ -61,7 +70,15 @@ class MatchmakingEventPublisherTest {
         void doesNotPublishWhenConnectionNotConnected() {
             when(natsConnection.getStatus()).thenReturn(Connection.Status.DISCONNECTED);
 
-            publisher.publishMatchFound(MATCH_ID, WHITE_ID, BLACK_ID, TIME_CONTROL, INITIAL_TIME, INCREMENT);
+            MatchFoundDto dto = MatchFoundDto.builder()
+                    .matchId(MATCH_ID)
+                    .whitePlayerId(WHITE_ID)
+                    .blackPlayerId(BLACK_ID)
+                    .timeControl(TIME_CONTROL)
+                    .initialTimeSeconds(INITIAL_TIME)
+                    .incrementSeconds(INCREMENT)
+                    .build();
+            publisher.publishMatchFound(dto);
 
             verify(natsConnection, never()).publish(any(), any(byte[].class));
         }
@@ -70,7 +87,15 @@ class MatchmakingEventPublisherTest {
         void publishesEventWhenConnected() throws Exception {
             when(natsConnection.getStatus()).thenReturn(Connection.Status.CONNECTED);
 
-            publisher.publishMatchFound(MATCH_ID, WHITE_ID, BLACK_ID, TIME_CONTROL, INITIAL_TIME, INCREMENT);
+            MatchFoundDto dto = MatchFoundDto.builder()
+                    .matchId(MATCH_ID)
+                    .whitePlayerId(WHITE_ID)
+                    .blackPlayerId(BLACK_ID)
+                    .timeControl(TIME_CONTROL)
+                    .initialTimeSeconds(INITIAL_TIME)
+                    .incrementSeconds(INCREMENT)
+                    .build();
+            publisher.publishMatchFound(dto);
 
             ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
             ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);

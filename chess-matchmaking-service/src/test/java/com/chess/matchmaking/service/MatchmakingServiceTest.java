@@ -1,9 +1,10 @@
 package com.chess.matchmaking.service;
 
-import com.chess.events.matchmaking.PlayerDequeuedEvent;
-import com.chess.events.matchmaking.PlayerQueuedEvent;
 import com.chess.matchmaking.config.MatchmakingProperties;
-import com.chess.matchmaking.model.QueuedPlayer;
+import com.chess.matchmaking.domain.QueuedPlayer;
+import com.chess.matchmaking.dto.MatchFoundDto;
+import com.chess.matchmaking.dto.PlayerDequeuedDto;
+import com.chess.matchmaking.dto.PlayerQueuedDto;
 import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,9 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,26 +57,38 @@ class MatchmakingServiceTest {
 
         @Test
         void addsPlayerToQueueAndTriesMatchmaking() {
-            PlayerQueuedEvent event = PlayerQueuedEvent.builder()
+            PlayerQueuedDto dto = PlayerQueuedDto.builder()
                     .userId(USER_1)
                     .timeControl(TIME_CONTROL)
                     .rating(RATING)
                     .ratingDeviation(100.0)
                     .build();
             when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
-            when(queueService.findMatchForPlayer(USER_1, TIME_CONTROL, RATING, 100)).thenReturn(null);
+            when(queueService.findMatchForPlayer(any())).thenReturn(null);
 
-            service.onPlayerQueued(event);
+            service.onPlayerQueued(dto);
 
-            verify(queueService).addPlayerToQueue(USER_1, TIME_CONTROL, RATING, 100.0);
-            verify(queueService).findMatchForPlayer(USER_1, TIME_CONTROL, RATING, 100);
-            verify(eventPublisher, never()).publishMatchFound(anyString(), anyString(), anyString(), anyString(),
-                    anyInt(), anyInt());
+            ArgumentCaptor<PlayerQueuedDto> addCaptor = ArgumentCaptor.forClass(PlayerQueuedDto.class);
+            verify(queueService).addPlayerToQueue(addCaptor.capture());
+            assertThat(addCaptor.getValue().getUserId()).isEqualTo(USER_1);
+            assertThat(addCaptor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
+            assertThat(addCaptor.getValue().getRating()).isEqualTo(RATING);
+            assertThat(addCaptor.getValue().getRatingDeviation()).isEqualTo(100.0);
+
+            ArgumentCaptor<com.chess.matchmaking.dto.FindMatchRequest> findCaptor = ArgumentCaptor
+                    .forClass(com.chess.matchmaking.dto.FindMatchRequest.class);
+            verify(queueService).findMatchForPlayer(findCaptor.capture());
+            assertThat(findCaptor.getValue().getUserId()).isEqualTo(USER_1);
+            assertThat(findCaptor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
+            assertThat(findCaptor.getValue().getRating()).isEqualTo(RATING);
+            assertThat(findCaptor.getValue().getRange()).isEqualTo(100);
+
+            verify(eventPublisher, never()).publishMatchFound(any(MatchFoundDto.class));
         }
 
         @Test
         void publishesMatchFoundWhenOpponentFound() {
-            PlayerQueuedEvent event = PlayerQueuedEvent.builder()
+            PlayerQueuedDto dto = PlayerQueuedDto.builder()
                     .userId(USER_1)
                     .timeControl(TIME_CONTROL)
                     .rating(RATING)
@@ -88,40 +100,37 @@ class MatchmakingServiceTest {
                     .rating(1520.0)
                     .build();
             when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
-            when(queueService.findMatchForPlayer(USER_1, TIME_CONTROL, RATING, 100)).thenReturn(opponent);
+            when(queueService.findMatchForPlayer(any())).thenReturn(opponent);
 
-            service.onPlayerQueued(event);
+            service.onPlayerQueued(dto);
 
-            ArgumentCaptor<String> matchIdCaptor = ArgumentCaptor.forClass(String.class);
-            ArgumentCaptor<String> whiteCaptor = ArgumentCaptor.forClass(String.class);
-            ArgumentCaptor<String> blackCaptor = ArgumentCaptor.forClass(String.class);
-            verify(eventPublisher).publishMatchFound(
-                    matchIdCaptor.capture(),
-                    whiteCaptor.capture(),
-                    blackCaptor.capture(),
-                    eq(TIME_CONTROL),
-                    eq(180),
-                    eq(2));
-
-            assertThat(matchIdCaptor.getValue()).isNotBlank();
-            assertThat(whiteCaptor.getValue()).isIn(USER_1, USER_2);
-            assertThat(blackCaptor.getValue()).isIn(USER_1, USER_2);
-            assertThat(whiteCaptor.getValue()).isNotEqualTo(blackCaptor.getValue());
+            ArgumentCaptor<MatchFoundDto> captor = ArgumentCaptor.forClass(MatchFoundDto.class);
+            verify(eventPublisher).publishMatchFound(captor.capture());
+            MatchFoundDto published = captor.getValue();
+            assertThat(published.getMatchId()).isNotBlank();
+            assertThat(published.getWhitePlayerId()).isIn(USER_1, USER_2);
+            assertThat(published.getBlackPlayerId()).isIn(USER_1, USER_2);
+            assertThat(published.getWhitePlayerId()).isNotEqualTo(published.getBlackPlayerId());
+            assertThat(published.getTimeControl()).isEqualTo(TIME_CONTROL);
+            assertThat(published.getInitialTimeSeconds()).isEqualTo(180);
+            assertThat(published.getIncrementSeconds()).isEqualTo(2);
         }
 
         @Test
         void usesDefaultRatingWhenNull() {
-            PlayerQueuedEvent event = PlayerQueuedEvent.builder()
+            PlayerQueuedDto dto = PlayerQueuedDto.builder()
                     .userId(USER_1)
                     .timeControl(TIME_CONTROL)
                     .rating(null)
                     .build();
             when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(0.0);
-            when(queueService.findMatchForPlayer(USER_1, TIME_CONTROL, 0.0, 100)).thenReturn(null);
+            when(queueService.findMatchForPlayer(any())).thenReturn(null);
 
-            service.onPlayerQueued(event);
+            service.onPlayerQueued(dto);
 
-            verify(queueService).addPlayerToQueue(USER_1, TIME_CONTROL, 0.0, null);
+            ArgumentCaptor<PlayerQueuedDto> addCaptor = ArgumentCaptor.forClass(PlayerQueuedDto.class);
+            verify(queueService).addPlayerToQueue(addCaptor.capture());
+            assertThat(addCaptor.getValue().getRating()).isEqualTo(0.0);
         }
     }
 
@@ -131,15 +140,18 @@ class MatchmakingServiceTest {
 
         @Test
         void removesPlayerFromQueue() {
-            PlayerDequeuedEvent event = PlayerDequeuedEvent.builder()
+            PlayerDequeuedDto dto = PlayerDequeuedDto.builder()
                     .userId(USER_1)
                     .timeControl(TIME_CONTROL)
                     .reason("cancelled")
                     .build();
 
-            service.onPlayerDequeued(event);
+            service.onPlayerDequeued(dto);
 
-            verify(queueService).removePlayerFromQueue(USER_1, TIME_CONTROL);
+            ArgumentCaptor<PlayerDequeuedDto> captor = ArgumentCaptor.forClass(PlayerDequeuedDto.class);
+            verify(queueService).removePlayerFromQueue(captor.capture());
+            assertThat(captor.getValue().getUserId()).isEqualTo(USER_1);
+            assertThat(captor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
         }
     }
 
@@ -152,23 +164,24 @@ class MatchmakingServiceTest {
             service.processMatchmaking();
 
             verify(queueService, never()).getPlayerRating(anyString(), anyString());
-            verify(queueService, never()).findMatchForPlayer(anyString(), anyString(), eq(RATING), anyInt());
+            verify(queueService, never()).findMatchForPlayer(any(com.chess.matchmaking.dto.FindMatchRequest.class));
         }
 
         @Test
         void expandsRangeAndTriesMatchmakingForQueuedPlayers() {
-            service.onPlayerQueued(PlayerQueuedEvent.builder()
+            service.onPlayerQueued(PlayerQueuedDto.builder()
                     .userId(USER_1)
                     .timeControl(TIME_CONTROL)
                     .rating(RATING)
                     .build());
-            when(queueService.findMatchForPlayer(USER_1, TIME_CONTROL, RATING, 100)).thenReturn(null);
+            when(queueService.findMatchForPlayer(any())).thenReturn(null);
             when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
 
             service.processMatchmaking();
 
             verify(queueService, org.mockito.Mockito.atLeast(1)).getPlayerRating(USER_1, TIME_CONTROL);
-            verify(queueService, org.mockito.Mockito.atLeast(1)).findMatchForPlayer(USER_1, TIME_CONTROL, RATING, 100);
+            verify(queueService, org.mockito.Mockito.atLeast(1))
+                    .findMatchForPlayer(any(com.chess.matchmaking.dto.FindMatchRequest.class));
         }
     }
 }

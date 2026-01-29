@@ -3,6 +3,8 @@ package com.chess.matchmaking.messaging;
 import com.chess.events.common.DomainEvent;
 import com.chess.events.matchmaking.PlayerDequeuedEvent;
 import com.chess.events.matchmaking.PlayerQueuedEvent;
+import com.chess.matchmaking.dto.PlayerDequeuedDto;
+import com.chess.matchmaking.dto.PlayerQueuedDto;
 import com.chess.matchmaking.service.MatchmakingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
@@ -80,10 +82,17 @@ public class MatchmakingEventListener {
         log.info("Received PlayerQueued event: userId={}, timeControl={}, rating={}",
                 event.getUserId(), event.getTimeControl(), event.getRating());
 
+        PlayerQueuedDto dto = PlayerQueuedDto.builder()
+                .userId(event.getUserId())
+                .timeControl(event.getTimeControl())
+                .rating(event.getRating())
+                .ratingDeviation(event.getRatingDeviation())
+                .build();
+
         Exception lastException = null;
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                matchmakingService.onPlayerQueued(event);
+                matchmakingService.onPlayerQueued(dto);
                 return;
             } catch (Exception e) {
                 lastException = e;
@@ -108,8 +117,14 @@ public class MatchmakingEventListener {
         log.info("Received PlayerDequeued event: userId={}, timeControl={}, reason={}",
                 event.getUserId(), event.getTimeControl(), event.getReason());
 
+        PlayerDequeuedDto dto = PlayerDequeuedDto.builder()
+                .userId(event.getUserId())
+                .timeControl(event.getTimeControl())
+                .reason(event.getReason())
+                .build();
+
         try {
-            matchmakingService.onPlayerDequeued(event);
+            matchmakingService.onPlayerDequeued(dto);
         } catch (Exception e) {
             log.error("Error processing PlayerDequeued event for userId={}", event.getUserId(), e);
         }

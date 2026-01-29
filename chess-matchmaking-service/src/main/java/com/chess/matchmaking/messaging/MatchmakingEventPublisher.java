@@ -3,6 +3,7 @@ package com.chess.matchmaking.messaging;
 import com.chess.events.constants.NatsSubjects;
 import com.chess.events.matchmaking.MatchFoundEvent;
 import com.chess.events.util.EventBuilder;
+import com.chess.matchmaking.dto.MatchFoundDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
 import lombok.extern.slf4j.Slf4j;
@@ -26,27 +27,21 @@ public class MatchmakingEventPublisher {
     }
 
     @Retryable(retryFor = { Exception.class }, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
-    public void publishMatchFound(
-            String matchId,
-            String whitePlayerId,
-            String blackPlayerId,
-            String timeControl,
-            int initialTimeSeconds,
-            int incrementSeconds) {
+    public void publishMatchFound(MatchFoundDto dto) {
         try {
             if (natsConnection == null || natsConnection.getStatus() != Connection.Status.CONNECTED) {
                 log.warn("NATS connection is not available. MatchFound event will not be published for matchId: {}",
-                        matchId);
+                        dto.getMatchId());
                 return;
             }
 
             MatchFoundEvent event = MatchFoundEvent.builder()
-                    .matchId(matchId)
-                    .whitePlayerId(whitePlayerId)
-                    .blackPlayerId(blackPlayerId)
-                    .timeControl(timeControl)
-                    .initialTimeSeconds(initialTimeSeconds)
-                    .incrementSeconds(incrementSeconds)
+                    .matchId(dto.getMatchId())
+                    .whitePlayerId(dto.getWhitePlayerId())
+                    .blackPlayerId(dto.getBlackPlayerId())
+                    .timeControl(dto.getTimeControl())
+                    .initialTimeSeconds(dto.getInitialTimeSeconds())
+                    .incrementSeconds(dto.getIncrementSeconds())
                     .build();
             EventBuilder.enrichEvent(event, PRODUCER);
 
@@ -54,9 +49,9 @@ public class MatchmakingEventPublisher {
             natsConnection.publish(NatsSubjects.MATCHMAKING_MATCH_FOUND, eventJson.getBytes());
 
             log.info("Published MatchFound event: matchId={}, white={}, black={}, timeControl={}",
-                    matchId, whitePlayerId, blackPlayerId, timeControl);
+                    dto.getMatchId(), dto.getWhitePlayerId(), dto.getBlackPlayerId(), dto.getTimeControl());
         } catch (Exception e) {
-            log.error("Error publishing MatchFound event for matchId: {}", matchId, e);
+            log.error("Error publishing MatchFound event for matchId: {}", dto.getMatchId(), e);
             throw new RuntimeException("Failed to publish MatchFound event", e);
         }
     }

@@ -1,6 +1,9 @@
 package com.chess.matchmaking.service;
 
-import com.chess.matchmaking.model.QueuedPlayer;
+import com.chess.matchmaking.domain.QueuedPlayer;
+import com.chess.matchmaking.dto.FindMatchRequest;
+import com.chess.matchmaking.dto.PlayerDequeuedDto;
+import com.chess.matchmaking.dto.PlayerQueuedDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,14 +32,18 @@ public class MatchmakingQueueService {
     @SuppressWarnings("rawtypes")
     private final RedisScript<List> findAndRemovePairScript;
 
-    public void addPlayerToQueue(String userId, String timeControl, Double rating, Double ratingDeviation) {
+    public void addPlayerToQueue(PlayerQueuedDto dto) {
+        String userId = dto.getUserId();
+        String timeControl = dto.getTimeControl();
+        Double rating = dto.getRating();
+        Double ratingDeviation = dto.getRatingDeviation() != null ? dto.getRatingDeviation() : 0.0;
         try {
             long queueTime = System.currentTimeMillis();
             QueuedPlayer player = QueuedPlayer.builder()
                     .userId(userId)
                     .timeControl(timeControl)
                     .rating(rating)
-                    .ratingDeviation(ratingDeviation != null ? ratingDeviation : 0.0)
+                    .ratingDeviation(ratingDeviation)
                     .queueTime(queueTime)
                     .build();
             String playerJson = objectMapper.writeValueAsString(player);
@@ -54,7 +61,9 @@ public class MatchmakingQueueService {
         }
     }
 
-    public void removePlayerFromQueue(String userId, String timeControl) {
+    public void removePlayerFromQueue(PlayerDequeuedDto dto) {
+        String userId = dto.getUserId();
+        String timeControl = dto.getTimeControl();
         String queueKey = queueKey(timeControl);
         zSetOperations.remove(queueKey, userId);
         String playerDataKey = playerDataKey(timeControl, userId);
@@ -63,7 +72,11 @@ public class MatchmakingQueueService {
     }
 
     @SuppressWarnings("unchecked")
-    public QueuedPlayer findMatchForPlayer(String userId, String timeControl, Double rating, int range) {
+    public QueuedPlayer findMatchForPlayer(FindMatchRequest request) {
+        String userId = request.getUserId();
+        String timeControl = request.getTimeControl();
+        Double rating = request.getRating();
+        int range = request.getRange();
         String queueKey = queueKey(timeControl);
         List<String> keys = Collections.singletonList(queueKey);
 

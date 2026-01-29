@@ -1,6 +1,9 @@
 package com.chess.matchmaking.service;
 
-import com.chess.matchmaking.model.QueuedPlayer;
+import com.chess.matchmaking.domain.QueuedPlayer;
+import com.chess.matchmaking.dto.FindMatchRequest;
+import com.chess.matchmaking.dto.PlayerDequeuedDto;
+import com.chess.matchmaking.dto.PlayerQueuedDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +82,13 @@ class MatchmakingQueueServiceTest {
             String expectedJson = "{\"userId\":\"user-1\",\"timeControl\":\"180+2\"}";
             when(objectMapper.writeValueAsString(any(QueuedPlayer.class))).thenReturn(expectedJson);
 
-            service.addPlayerToQueue(USER_ID, TIME_CONTROL, RATING, RATING_DEVIATION);
+            PlayerQueuedDto dto = PlayerQueuedDto.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .ratingDeviation(RATING_DEVIATION)
+                    .build();
+            service.addPlayerToQueue(dto);
 
             verify(zSetOperations).add("matchmaking:queue:180+2", USER_ID, RATING);
             verify(valueOperations).set(
@@ -93,7 +102,12 @@ class MatchmakingQueueServiceTest {
         void usesZeroRatingDeviationWhenNull() throws JsonProcessingException {
             when(objectMapper.writeValueAsString(any(QueuedPlayer.class))).thenReturn("{}");
 
-            service.addPlayerToQueue(USER_ID, TIME_CONTROL, RATING, null);
+            service.addPlayerToQueue(PlayerQueuedDto.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .ratingDeviation(null)
+                    .build());
 
             ArgumentCaptor<QueuedPlayer> captor = ArgumentCaptor.forClass(QueuedPlayer.class);
             verify(objectMapper).writeValueAsString(captor.capture());
@@ -106,7 +120,13 @@ class MatchmakingQueueServiceTest {
                     .thenThrow(new JsonProcessingException("bad") {
                     });
 
-            assertThatThrownBy(() -> service.addPlayerToQueue(USER_ID, TIME_CONTROL, RATING, RATING_DEVIATION))
+            PlayerQueuedDto dto = PlayerQueuedDto.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .ratingDeviation(RATING_DEVIATION)
+                    .build();
+            assertThatThrownBy(() -> service.addPlayerToQueue(dto))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Failed to add player to queue");
         }
@@ -118,7 +138,12 @@ class MatchmakingQueueServiceTest {
 
         @Test
         void removesFromZSetAndDeletesPlayerDataKey() {
-            service.removePlayerFromQueue(USER_ID, TIME_CONTROL);
+            PlayerDequeuedDto dto = PlayerDequeuedDto.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .reason("cancelled")
+                    .build();
+            service.removePlayerFromQueue(dto);
 
             verify(zSetOperations).remove("matchmaking:queue:180+2", USER_ID);
             verify(redisTemplate).delete(eq("matchmaking:player:180+2:user-1"));
@@ -157,7 +182,13 @@ class MatchmakingQueueServiceTest {
             when(redisTemplate.execute(eq(findAndRemovePairScript), anyList(), any(), any(), any()))
                     .thenReturn(null);
 
-            QueuedPlayer result = service.findMatchForPlayer(USER_ID, TIME_CONTROL, RATING, 100);
+            FindMatchRequest request = FindMatchRequest.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .range(100)
+                    .build();
+            QueuedPlayer result = service.findMatchForPlayer(request);
 
             assertThat(result).isNull();
             verify(redisTemplate, never()).delete(any(String.class));
@@ -169,7 +200,13 @@ class MatchmakingQueueServiceTest {
             when(redisTemplate.execute(eq(findAndRemovePairScript), anyList(), any(), any(), any()))
                     .thenReturn(List.of(USER_ID));
 
-            QueuedPlayer result = service.findMatchForPlayer(USER_ID, TIME_CONTROL, RATING, 100);
+            FindMatchRequest request = FindMatchRequest.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .range(100)
+                    .build();
+            QueuedPlayer result = service.findMatchForPlayer(request);
 
             assertThat(result).isNull();
         }
@@ -190,7 +227,13 @@ class MatchmakingQueueServiceTest {
             when(valueOperations.get("matchmaking:player:180+2:user-2")).thenReturn(opponentJson);
             when(objectMapper.readValue(opponentJson, QueuedPlayer.class)).thenReturn(opponentData);
 
-            QueuedPlayer result = service.findMatchForPlayer(USER_ID, TIME_CONTROL, RATING, 100);
+            FindMatchRequest request = FindMatchRequest.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .range(100)
+                    .build();
+            QueuedPlayer result = service.findMatchForPlayer(request);
 
             assertThat(result).isNotNull();
             assertThat(result.getUserId()).isEqualTo(OPPONENT_ID);
@@ -210,7 +253,13 @@ class MatchmakingQueueServiceTest {
                     .thenReturn(List.of(USER_ID, OPPONENT_ID));
             when(valueOperations.get(anyString())).thenReturn(null);
 
-            QueuedPlayer result = service.findMatchForPlayer(USER_ID, TIME_CONTROL, RATING, 100);
+            FindMatchRequest request = FindMatchRequest.builder()
+                    .userId(USER_ID)
+                    .timeControl(TIME_CONTROL)
+                    .rating(RATING)
+                    .range(100)
+                    .build();
+            QueuedPlayer result = service.findMatchForPlayer(request);
 
             assertThat(result).isNotNull();
             assertThat(result.getUserId()).isEqualTo(OPPONENT_ID);
