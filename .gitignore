@@ -69,5 +69,5 @@ secrets.yml
 node_modules
 /.kotlin/
 
-.env
+docker/.env
 amplicode.xml

@@ -86,10 +86,9 @@ public class AuthService {
         log.info("User logged in successfully: userId={}, email={}", user.getId(), user.getEmail());
 
         return AuthResponse.builder()
-                .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshTokenValue)
-                .expiresIn(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
+                .expiresInSeconds(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
                 .build();
     }
 
@@ -113,10 +112,9 @@ public class AuthService {
         log.info("Tokens refreshed successfully for userId: {}", user.getId());
 
         return AuthResponse.builder()
-                .userId(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(newRefreshTokenValue)
-                .expiresIn(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
+                .expiresInSeconds(jwtTokenProvider.getAccessTokenValidityMs() / 1000)
                 .build();
     }
 

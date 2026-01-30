@@ -1,5 +1,6 @@
 package com.chess.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserProfilePublicResponse {
 
+    @JsonProperty("userId")
     private UUID id;
     private String username;
     private String avatarUrl;

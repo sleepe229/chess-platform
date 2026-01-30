@@ -29,8 +29,11 @@ public class User {
     private String passwordHash;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role")
+    @CollectionTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id", nullable = false)
+    )
+    @Column(name = "role", nullable = false)
     @Builder.Default
     private List<String> roles = new ArrayList<>();
 

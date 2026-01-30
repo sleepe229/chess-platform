@@ -16,6 +16,10 @@
     <name>Chess Event Contracts</name>
     <description>Shared event contracts for NATS messaging</description>
 
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
     <dependencies>
         <!-- Jackson -->
         <dependency>
@@ -47,17 +51,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

@@ -1,0 +1,294 @@
+networks:
+  chess-network:
+    driver: bridge
+
+volumes:
+  postgres-auth-data:
+  postgres-user-data:
+  postgres-game-data:
+  postgres-matchmaking-data:
+  redis-data:
+
+services:
+  postgres-auth:
+    image: postgres:17-alpine
+    container_name: chess-postgres-auth
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_auth
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  postgres-user:
+    image: postgres:17-alpine
+    container_name: chess-postgres-user
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_user
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  postgres-game:
+    image: postgres:17-alpine
+    container_name: chess-postgres-game
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_game
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-game-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  postgres-matchmaking:
+    image: postgres:17-alpine
+    container_name: chess-postgres-matchmaking
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_matchmaking
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-matchmaking-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: chess-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - chess-network
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: chess-nats
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["-js", "-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  chess-auth-service:
+    build:
+      context: ..
+      dockerfile: chess-auth-service/Dockerfile
+    container_name: chess-auth-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:${DB_PORT}/chess_auth
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${AUTH_SERVICE_PORT}:8081"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-user-service:
+    build:
+      context: ..
+      dockerfile: chess-user-service/Dockerfile
+    container_name: chess-user-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:${DB_PORT}/chess_user
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${USER_SERVICE_PORT}:8082"
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-matchmaking-service:
+    build:
+      context: ..
+      dockerfile: chess-matchmaking-service/Dockerfile
+    container_name: chess-matchmaking-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-matchmaking:${DB_PORT}/chess_matchmaking
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${MATCHMAKING_SERVICE_PORT}:8083"
+    depends_on:
+      postgres-matchmaking:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-game-service:
+    build:
+      context: ..
+      dockerfile: chess-game-service/Dockerfile
+    container_name: chess-game-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-game:${DB_PORT}/chess_game
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${GAME_SERVICE_PORT}:8084"
+    depends_on:
+      postgres-game:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-ws-service:
+    build:
+      context: ..
+      dockerfile: chess-ws-service/Dockerfile
+    container_name: chess-ws-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${WS_SERVICE_PORT}:8085"
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-analytics-service:
+    build:
+      context: ..
+      dockerfile: chess-analytics-service/Dockerfile
+    container_name: chess-analytics-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JWT_SECRET: ${JWT_SECRET}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "${ANALYTICS_SERVICE_PORT}:8086"
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - chess-network
+
+  chess-api-gateway:
+    build:
+      context: ..
+      dockerfile: chess-api-gateway/Dockerfile
+    container_name: chess-api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      AUTH_SERVICE_HOST: ${AUTH_SERVICE_HOST}
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+      USER_SERVICE_HOST: ${USER_SERVICE_HOST}
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
+      MATCHMAKING_SERVICE_HOST: ${MATCHMAKING_SERVICE_HOST}
+      MATCHMAKING_SERVICE_PORT: ${MATCHMAKING_SERVICE_PORT}
+      GAME_SERVICE_HOST: ${GAME_SERVICE_HOST}
+      GAME_SERVICE_PORT: ${GAME_SERVICE_PORT}
+      WS_SERVICE_HOST: ${WS_SERVICE_HOST}
+      WS_SERVICE_PORT: ${WS_SERVICE_PORT}
+      ANALYTICS_SERVICE_HOST: ${ANALYTICS_SERVICE_HOST}
+      ANALYTICS_SERVICE_PORT: ${ANALYTICS_SERVICE_PORT}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    ports:
+      - "${GATEWAY_PORT}:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      chess-auth-service:
+        condition: service_started
+      chess-user-service:
+        condition: service_started
+      chess-matchmaking-service:
+        condition: service_started
+      chess-game-service:
+        condition: service_started
+      chess-ws-service:
+        condition: service_started
+      chess-analytics-service:
+        condition: service_started
+    networks:
+      - chess-network

@@ -170,6 +170,7 @@ public class RatingService {
                 .timeControl(rating.getTimeControl())
                 .rating(rating.getRating())
                 .ratingDeviation(rating.getRatingDeviation())
+                .volatility(rating.getVolatility())
                 .gamesPlayed(rating.getGamesPlayed())
                 .peakRating(rating.getPeakRating())
                 .updatedAt(rating.getUpdatedAt())

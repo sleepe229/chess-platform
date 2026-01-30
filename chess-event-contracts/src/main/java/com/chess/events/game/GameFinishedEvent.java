@@ -38,6 +38,12 @@ public class GameFinishedEvent extends DomainEvent {
     @NotBlank
     private String pgn;
 
+    @NotBlank
+    private Boolean rated;
+    
+    @NotBlank
+    private String timeControlType;
+
     @Override
     public String getAggregateId() {
         return gameId;

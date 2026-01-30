@@ -35,19 +35,19 @@ public class User {
     @Column(length = 100)
     private String country;
 
-    @Column(name = "total_games")
+    @Column(name = "total_games", nullable = false)
     @Builder.Default
     private Integer totalGames = 0;
 
-    @Column(name = "total_wins")
+    @Column(name = "total_wins", nullable = false)
     @Builder.Default
     private Integer totalWins = 0;
 
-    @Column(name = "total_losses")
+    @Column(name = "total_losses", nullable = false)
     @Builder.Default
     private Integer totalLosses = 0;
 
-    @Column(name = "total_draws")
+    @Column(name = "total_draws", nullable = false)
     @Builder.Default
     private Integer totalDraws = 0;
 

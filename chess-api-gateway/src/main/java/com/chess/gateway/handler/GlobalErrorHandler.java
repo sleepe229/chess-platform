@@ -2,9 +2,9 @@ package com.chess.gateway.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,17 +13,18 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
     private final ObjectMapper objectMapper;
+
+    public GlobalErrorHandler(@Autowired(required = false) ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
@@ -38,25 +39,26 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("error", errorCode);
         errorResponse.put("message", message);
-        errorResponse.put("traceId", traceId);
-        errorResponse.put("timestamp", Instant.now().toString());
+        errorResponse.put("traceId", traceId != null ? traceId : "");
+        errorResponse.put("details", new HashMap<>());
 
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         try {
-            byte[] bytes = objectMapper.writeValueAsString(errorResponse).getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = objectMapper.writeValueAsBytes(errorResponse);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (JsonProcessingException e) {
-            log.error("Error serializing error response", e);
-            return exchange.getResponse().setComplete();
+            log.error("Failed to serialize error response", e);
+            byte[] fallback = "{\"error\":\"INTERNAL_SERVER_ERROR\",\"message\":\"An error occurred\",\"traceId\":\"\",\"details\":{}}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(fallback)));
         }
     }
 
     private HttpStatus determineHttpStatus(Throwable ex) {
         if (ex instanceof ResponseStatusException) {
-            return ((ResponseStatusException) ex).getStatusCode();
+            return (HttpStatus) ((ResponseStatusException) ex).getStatusCode();
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
