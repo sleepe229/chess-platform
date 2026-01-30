@@ -1,198 +1,158 @@
 package com.chess.matchmaking.service;
 
+import com.chess.common.exception.ForbiddenException;
+import com.chess.common.exception.NotFoundException;
+import com.chess.matchmaking.client.UserRatingsClient;
 import com.chess.matchmaking.config.MatchmakingProperties;
-import com.chess.matchmaking.domain.QueuedPlayer;
-import com.chess.matchmaking.dto.FindMatchRequest;
+import com.chess.matchmaking.domain.TimeControlClassifier;
+import com.chess.matchmaking.domain.TimeControlType;
 import com.chess.matchmaking.dto.MatchFoundDto;
-import com.chess.matchmaking.dto.PlayerDequeuedDto;
-import com.chess.matchmaking.dto.PlayerQueuedDto;
+import com.chess.matchmaking.dto.MatchmakingStatus;
+import com.chess.matchmaking.dto.MatchmakingStatusResponse;
 import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
+import com.chess.matchmaking.repo.MatchmakingAuditRepository;
+import com.chess.matchmaking.repo.MatchmakingRequestStore;
+import com.chess.matchmaking.repo.RedisMatchmakingEngine;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchmakingService {
 
-    private final MatchmakingQueueService queueService;
-    private final MatchmakingEventPublisher eventPublisher;
+    private final MatchmakingRequestStore requestStore;
+    private final TimeControlClassifier timeControlClassifier;
+    private final UserRatingsClient userRatingsClient;
+    private final RedisMatchmakingEngine matchmakingEngine;
     private final MatchmakingProperties properties;
+    private final MatchmakingEventPublisher eventPublisher;
+    private final ObjectProvider<MatchmakingAuditRepository> auditRepositoryProvider;
 
-    private final Map<String, Long> playerQueueTimes = new ConcurrentHashMap<>();
-    private final Map<String, Integer> playerRanges = new ConcurrentHashMap<>();
-    private final Map<String, Double> playerRatings = new ConcurrentHashMap<>();
-    private final Map<String, String> playerTimeControls = new ConcurrentHashMap<>();
-    private final Map<String, Boolean> playerRated = new ConcurrentHashMap<>();
+    public String join(UUID userId, int baseSeconds, int incrementSeconds, boolean rated, String idempotencyKey, String requestIdHeader) {
+        String requestId = requestStore.createOrGetActiveRequest(userId, baseSeconds, incrementSeconds, rated, idempotencyKey, requestIdHeader);
 
-    public void onPlayerQueued(PlayerQueuedDto dto) {
-        String userId = dto.getUserId();
-        String timeControl = dto.getTimeControl();
-        Double rating = dto.getRating() != null ? dto.getRating() : 0.0;
-        Double ratingDeviation = dto.getRatingDeviation();
-
-        log.info("Adding player to queue: userId={}, timeControl={}, rating={}", userId, timeControl, rating);
-
-        queueService.addPlayerToQueue(PlayerQueuedDto.builder()
-                .userId(userId)
-                .timeControl(timeControl)
-                .rating(rating)
-                .ratingDeviation(ratingDeviation)
-                .rated(dto.getRated())
-                .build());
-
-        String k = key(userId, timeControl);
-        playerQueueTimes.put(k, System.currentTimeMillis());
-        playerRanges.put(k, properties.getInitialRatingRange());
-        playerRatings.put(k, rating);
-        playerTimeControls.put(k, timeControl);
-        playerRated.put(k, dto.getRated() != null ? dto.getRated() : true);
-
-        FindMatchRequest findRequest = FindMatchRequest.builder()
-                .userId(userId)
-                .timeControl(timeControl)
-                .rating(rating)
-                .range(properties.getInitialRatingRange())
-                .build();
-        processPlayerMatchmaking(findRequest);
-    }
-
-    public void onPlayerDequeued(PlayerDequeuedDto dto) {
-        String userId = dto.getUserId();
-        String timeControl = dto.getTimeControl();
-
-        log.info("Removing player from queue: userId={}, timeControl={}, reason={}",
-                userId, timeControl, dto.getReason());
-
-        queueService.removePlayerFromQueue(dto);
-
-        String k = key(userId, timeControl);
-        playerQueueTimes.remove(k);
-        playerRanges.remove(k);
-        playerRatings.remove(k);
-        playerTimeControls.remove(k);
-        playerRated.remove(k);
-    }
-
-    @Scheduled(fixedDelayString = "${matchmaking.range-expansion-interval-seconds:10}000")
-    public void processMatchmaking() {
-        long currentTime = System.currentTimeMillis();
-        long intervalMs = properties.getRangeExpansionIntervalSeconds() * 1000L;
-
-        playerQueueTimes.forEach((k, queueTime) -> {
-            long timeInQueue = currentTime - queueTime;
-            int expansions = (int) (timeInQueue / intervalMs);
-            int newRange = Math.min(
-                    properties.getInitialRatingRange() + (expansions * properties.getRatingRangeIncrement()),
-                    properties.getMaxRatingRange());
-
-            Integer currentRange = playerRanges.get(k);
-            if (currentRange == null || newRange > currentRange) {
-                playerRanges.put(k, newRange);
-                log.debug("Expanded search range for {} to ±{}", k, newRange);
-            }
-        });
-
-        playerRanges.forEach((k, range) -> {
-            Double rating = playerRatings.get(k);
-            String timeControl = playerTimeControls.get(k);
-            if (rating != null && timeControl != null) {
-                int colon = k.indexOf(':');
-                String userId = colon > 0 ? k.substring(colon + 1) : k;
-                FindMatchRequest findRequest = FindMatchRequest.builder()
-                        .userId(userId)
-                        .timeControl(timeControl)
-                        .rating(rating)
-                        .range(range)
-                        .build();
-                processPlayerMatchmaking(findRequest);
-            } else {
-                playerQueueTimes.remove(k);
-                playerRanges.remove(k);
-                playerRatings.remove(k);
-                playerTimeControls.remove(k);
-            }
-        });
-    }
-
-    private static String key(String userId, String timeControl) {
-        return timeControl + ":" + userId;
-    }
-
-    private void processPlayerMatchmaking(FindMatchRequest request) {
-        String userId = request.getUserId();
-        String timeControl = request.getTimeControl();
-        Double rating = request.getRating();
-        int range = request.getRange();
-
-        Double currentRating = queueService.getPlayerRating(userId, timeControl);
-        if (currentRating == null) {
-            String k = key(userId, timeControl);
-            playerQueueTimes.remove(k);
-            playerRanges.remove(k);
-            playerRatings.remove(k);
-            playerTimeControls.remove(k);
-            playerRated.remove(k);
-            return;
+        MatchmakingRequestStore.StoredRequest stored = requestStore.getRequest(requestId);
+        if (stored == null) {
+            throw new NotFoundException("Matchmaking request not found after creation");
         }
 
-        QueuedPlayer opponent = queueService.findMatchForPlayer(request);
-        if (opponent != null) {
-            String matchId = UUID.randomUUID().toString();
-            MatchmakingProperties.TimeControlParams params = properties.getTimeControls().get(timeControl);
-            int initialTimeSeconds = params != null ? params.getInitialTimeSeconds() : 180;
-            int incrementSeconds = params != null ? params.getIncrementSeconds() : 2;
+        String status = stored.status() != null ? stored.status() : MatchmakingStatus.QUEUED.name();
+        if (!MatchmakingStatus.QUEUED.name().equals(status)) {
+            return requestId;
+        }
 
-            String whitePlayerId = userId;
-            String blackPlayerId = opponent.getUserId();
-            if (Math.random() >= 0.5) {
-                whitePlayerId = opponent.getUserId();
-                blackPlayerId = userId;
-            }
+        TimeControlType timeControlType = timeControlClassifier.classify(baseSeconds, incrementSeconds);
 
-            Boolean isRated = getRatedForPlayers(userId, opponent.getUserId(), timeControl);
-            
-            MatchFoundDto matchFoundDto = MatchFoundDto.builder()
-                    .matchId(matchId)
-                    .whitePlayerId(whitePlayerId)
-                    .blackPlayerId(blackPlayerId)
-                    .timeControl(timeControl)
-                    .initialTimeSeconds(initialTimeSeconds)
-                    .incrementSeconds(incrementSeconds)
-                    .rated(isRated)
-                    .build();
+        boolean needsEnrichment = stored.timeControlType() == null || stored.rating() == null || stored.ratingDeviation() == null;
+        if (needsEnrichment) {
+            UserRatingsClient.RatingInfo ratingInfo = userRatingsClient.fetchRating(userId, timeControlType.name());
+            requestStore.enrichQueuedRequest(requestId, timeControlType.name(), ratingInfo.rating(), ratingInfo.ratingDeviation());
+        }
+
+        MatchmakingRequestStore.StoredRequest enriched = requestStore.getRequest(requestId);
+        double rating = enriched != null && enriched.rating() != null ? Double.parseDouble(enriched.rating()) : 0.0;
+        Double ratingDeviation = enriched != null && enriched.ratingDeviation() != null ? Double.valueOf(enriched.ratingDeviation()) : null;
+
+        MatchmakingAuditRepository audit = auditRepositoryProvider.getIfAvailable();
+        if (audit != null) {
             try {
-                eventPublisher.publishMatchFound(matchFoundDto);
-            } catch (Exception e) {
-                log.error("Failed to publish MatchFound event for matchId={}", matchId, e);
+                audit.upsertQueued(
+                        UUID.fromString(requestId),
+                        userId,
+                        timeControlType.name(),
+                        baseSeconds,
+                        incrementSeconds,
+                        rated,
+                        rating,
+                        ratingDeviation,
+                        requestIdHeader,
+                        idempotencyKey
+                );
+            } catch (Exception ignored) {
+                // audit is best-effort; matchmaking must stay available
+            }
+        }
+
+        RedisMatchmakingEngine.MatchPair pair = matchmakingEngine.enqueueAndTryMatch(
+                timeControlType.name(),
+                requestId,
+                rating,
+                properties.getInitialRatingRange(),
+                properties.getRatingRangeIncrement(),
+                properties.getMaxRatingRange(),
+                properties.getRangeExpansionIntervalSeconds() * 1000L
+        );
+
+        if (pair != null) {
+            String gameId = UUID.randomUUID().toString();
+            requestStore.markMatched(pair.requestId1(), gameId);
+            requestStore.markMatched(pair.requestId2(), gameId);
+
+            MatchmakingRequestStore.StoredRequest r1 = requestStore.getRequest(pair.requestId1());
+            MatchmakingRequestStore.StoredRequest r2 = requestStore.getRequest(pair.requestId2());
+            if (r1 != null && r2 != null) {
+                boolean whiteFirst = (System.nanoTime() & 1) == 0;
+                String white = whiteFirst ? r1.userId() : r2.userId();
+                String black = whiteFirst ? r2.userId() : r1.userId();
+
+                eventPublisher.publishMatchFound(MatchFoundDto.builder()
+                        .matchId(gameId)
+                        .whitePlayerId(white)
+                        .blackPlayerId(black)
+                        .timeControl(timeControlType.name())
+                        .initialTimeSeconds(baseSeconds)
+                        .incrementSeconds(incrementSeconds)
+                        .rated(rated)
+                        .build());
             }
 
-            String k1 = key(userId, timeControl);
-            String k2 = key(opponent.getUserId(), timeControl);
-            playerQueueTimes.remove(k1);
-            playerRanges.remove(k1);
-            playerRatings.remove(k1);
-            playerTimeControls.remove(k1);
-            playerRated.remove(k1);
-            playerQueueTimes.remove(k2);
-            playerRanges.remove(k2);
-            playerRatings.remove(k2);
-            playerTimeControls.remove(k2);
-            playerRated.remove(k2);
+            if (audit != null) {
+                try {
+                    UUID gameUuid = UUID.fromString(gameId);
+                    audit.markMatched(UUID.fromString(pair.requestId1()), gameUuid);
+                    audit.markMatched(UUID.fromString(pair.requestId2()), gameUuid);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        return requestId;
+    }
+
+    public void leave(UUID userId, String requestId, String idempotencyKey, String requestIdHeader) {
+        MatchmakingRequestStore.StoredRequest req = requestStore.getRequest(requestId);
+        if (req == null) {
+            throw new NotFoundException("Matchmaking request not found");
+        }
+        if (!userId.toString().equals(req.userId())) {
+            throw new ForbiddenException("Request does not belong to user");
+        }
+        if (req.timeControlType() != null && !req.timeControlType().isBlank()) {
+            matchmakingEngine.removeFromQueues(req.timeControlType(), requestId);
+        }
+        requestStore.cancelRequest(userId, requestId, idempotencyKey, requestIdHeader);
+
+        MatchmakingAuditRepository audit = auditRepositoryProvider.getIfAvailable();
+        if (audit != null) {
+            try {
+                audit.markCancelled(UUID.fromString(requestId), "cancelled");
+            } catch (Exception ignored) {
+            }
         }
     }
 
-    private Boolean getRatedForPlayers(String userId1, String userId2, String timeControl) {
-        String k1 = key(userId1, timeControl);
-        String k2 = key(userId2, timeControl);
-        Boolean rated1 = playerRated.getOrDefault(k1, true);
-        Boolean rated2 = playerRated.getOrDefault(k2, true);
-        return rated1 != null && rated1 && rated2 != null && rated2;
+    public MatchmakingStatusResponse status(UUID userId, String requestId) {
+        MatchmakingRequestStore.StoredRequest req = requestStore.getRequest(requestId);
+        if (req == null) {
+            throw new NotFoundException("Matchmaking request not found");
+        }
+        if (!userId.toString().equals(req.userId())) {
+            throw new ForbiddenException("Request does not belong to user");
+        }
+        String status = req.status() != null ? req.status() : MatchmakingStatus.QUEUED.name();
+        return new MatchmakingStatusResponse(requestId, status, req.gameId());
     }
 }

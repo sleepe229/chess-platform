@@ -11,13 +11,13 @@ import java.util.List;
 @Configuration
 public class RedisScriptConfig {
 
-    private static final String SCRIPT_PATH = "lua/find-and-remove-pair.lua";
+    private static final String TRY_MATCH_SCRIPT_PATH = "lua/try-match.lua";
 
     @Bean
     @SuppressWarnings("rawtypes")
-    public RedisScript<List> findAndRemovePairScript() {
+    public RedisScript<List> tryMatchScript() {
         DefaultRedisScript<List> script = new DefaultRedisScript<>();
-        script.setLocation(new ClassPathResource(SCRIPT_PATH));
+        script.setLocation(new ClassPathResource(TRY_MATCH_SCRIPT_PATH));
         script.setResultType(List.class);
         return script;
     }

@@ -16,6 +16,7 @@ public class MatchmakingProperties {
     private int ratingRangeIncrement = 50;
     private int maxRatingRange = 500;
     private long rangeExpansionIntervalSeconds = 10;
+    private long queueTimeoutSeconds = 120;
 
     private Map<String, TimeControlParams> timeControls = defaultTimeControls();
 

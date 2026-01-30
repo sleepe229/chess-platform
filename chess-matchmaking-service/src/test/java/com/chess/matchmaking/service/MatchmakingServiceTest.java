@@ -1,44 +1,57 @@
 package com.chess.matchmaking.service;
 
+import com.chess.common.exception.ForbiddenException;
+import com.chess.matchmaking.client.UserRatingsClient;
 import com.chess.matchmaking.config.MatchmakingProperties;
-import com.chess.matchmaking.domain.QueuedPlayer;
+import com.chess.matchmaking.domain.TimeControlClassifier;
+import com.chess.matchmaking.domain.TimeControlType;
 import com.chess.matchmaking.dto.MatchFoundDto;
-import com.chess.matchmaking.dto.PlayerDequeuedDto;
-import com.chess.matchmaking.dto.PlayerQueuedDto;
+import com.chess.matchmaking.repo.MatchmakingAuditRepository;
 import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
+import com.chess.matchmaking.repo.MatchmakingRequestStore;
+import com.chess.matchmaking.repo.RedisMatchmakingEngine;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("MatchmakingService")
 class MatchmakingServiceTest {
 
-    private static final String USER_1 = "user-1";
-    private static final String USER_2 = "user-2";
-    private static final String TIME_CONTROL = "180+2";
-    private static final Double RATING = 1500.0;
-
     @Mock
-    private MatchmakingQueueService queueService;
-
+    private MatchmakingRequestStore requestStore;
+    @Mock
+    private TimeControlClassifier timeControlClassifier;
+    @Mock
+    private UserRatingsClient userRatingsClient;
+    @Mock
+    private RedisMatchmakingEngine matchmakingEngine;
     @Mock
     private MatchmakingEventPublisher eventPublisher;
+    @Mock
+    private ObjectProvider<MatchmakingAuditRepository> auditRepositoryProvider;
+    @Mock
+    private MatchmakingAuditRepository auditRepository;
 
     private MatchmakingProperties properties;
-
     private MatchmakingService service;
 
     @BeforeEach
@@ -48,140 +61,160 @@ class MatchmakingServiceTest {
         properties.setRatingRangeIncrement(50);
         properties.setMaxRatingRange(500);
         properties.setRangeExpansionIntervalSeconds(10);
-        service = new MatchmakingService(queueService, eventPublisher, properties);
+
+        service = new MatchmakingService(
+                requestStore,
+                timeControlClassifier,
+                userRatingsClient,
+                matchmakingEngine,
+                properties,
+                eventPublisher,
+                auditRepositoryProvider
+        );
     }
 
-    @Nested
-    @DisplayName("onPlayerQueued")
-    class OnPlayerQueued {
+    @Test
+    void join_enrichesQueuedRequest_auditsQueued_andEnqueues() {
+        UUID userId = UUID.randomUUID();
+        String requestId = UUID.randomUUID().toString();
 
-        @Test
-        void addsPlayerToQueueAndTriesMatchmaking() {
-            PlayerQueuedDto dto = PlayerQueuedDto.builder()
-                    .userId(USER_1)
-                    .timeControl(TIME_CONTROL)
-                    .rating(RATING)
-                    .ratingDeviation(100.0)
-                    .build();
-            when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
-            when(queueService.findMatchForPlayer(any())).thenReturn(null);
+        when(requestStore.createOrGetActiveRequest(eq(userId), eq(180), eq(2), eq(true), eq("idem"), eq("rid")))
+                .thenReturn(requestId);
+        when(timeControlClassifier.classify(180, 2)).thenReturn(TimeControlType.BLITZ);
+        when(userRatingsClient.fetchRating(eq(userId), eq(TimeControlType.BLITZ.name())))
+                .thenReturn(new UserRatingsClient.RatingInfo(TimeControlType.BLITZ.name(), 1500.0, 120.0));
+        when(auditRepositoryProvider.getIfAvailable()).thenReturn(auditRepository);
 
-            service.onPlayerQueued(dto);
+        MatchmakingRequestStore.StoredRequest initial = new MatchmakingRequestStore.StoredRequest(
+                requestId, userId.toString(), "QUEUED", null, null,
+                "180", "2", "true", null, null, String.valueOf(System.currentTimeMillis())
+        );
+        MatchmakingRequestStore.StoredRequest enriched = new MatchmakingRequestStore.StoredRequest(
+                requestId, userId.toString(), "QUEUED", null, TimeControlType.BLITZ.name(),
+                "180", "2", "true", "1500.0", "120.0", String.valueOf(System.currentTimeMillis())
+        );
+        when(requestStore.getRequest(requestId)).thenReturn(initial, enriched);
 
-            ArgumentCaptor<PlayerQueuedDto> addCaptor = ArgumentCaptor.forClass(PlayerQueuedDto.class);
-            verify(queueService).addPlayerToQueue(addCaptor.capture());
-            assertThat(addCaptor.getValue().getUserId()).isEqualTo(USER_1);
-            assertThat(addCaptor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
-            assertThat(addCaptor.getValue().getRating()).isEqualTo(RATING);
-            assertThat(addCaptor.getValue().getRatingDeviation()).isEqualTo(100.0);
+        when(matchmakingEngine.enqueueAndTryMatch(
+                eq(TimeControlType.BLITZ.name()),
+                eq(requestId),
+                anyDouble(),
+                anyInt(),
+                anyInt(),
+                anyInt(),
+                anyLong()
+        )).thenReturn(null);
 
-            ArgumentCaptor<com.chess.matchmaking.dto.FindMatchRequest> findCaptor = ArgumentCaptor
-                    .forClass(com.chess.matchmaking.dto.FindMatchRequest.class);
-            verify(queueService).findMatchForPlayer(findCaptor.capture());
-            assertThat(findCaptor.getValue().getUserId()).isEqualTo(USER_1);
-            assertThat(findCaptor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
-            assertThat(findCaptor.getValue().getRating()).isEqualTo(RATING);
-            assertThat(findCaptor.getValue().getRange()).isEqualTo(100);
+        String returned = service.join(userId, 180, 2, true, "idem", "rid");
 
-            verify(eventPublisher, never()).publishMatchFound(any(MatchFoundDto.class));
-        }
-
-        @Test
-        void publishesMatchFoundWhenOpponentFound() {
-            PlayerQueuedDto dto = PlayerQueuedDto.builder()
-                    .userId(USER_1)
-                    .timeControl(TIME_CONTROL)
-                    .rating(RATING)
-                    .ratingDeviation(100.0)
-                    .build();
-            QueuedPlayer opponent = QueuedPlayer.builder()
-                    .userId(USER_2)
-                    .timeControl(TIME_CONTROL)
-                    .rating(1520.0)
-                    .build();
-            when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
-            when(queueService.findMatchForPlayer(any())).thenReturn(opponent);
-
-            service.onPlayerQueued(dto);
-
-            ArgumentCaptor<MatchFoundDto> captor = ArgumentCaptor.forClass(MatchFoundDto.class);
-            verify(eventPublisher).publishMatchFound(captor.capture());
-            MatchFoundDto published = captor.getValue();
-            assertThat(published.getMatchId()).isNotBlank();
-            assertThat(published.getWhitePlayerId()).isIn(USER_1, USER_2);
-            assertThat(published.getBlackPlayerId()).isIn(USER_1, USER_2);
-            assertThat(published.getWhitePlayerId()).isNotEqualTo(published.getBlackPlayerId());
-            assertThat(published.getTimeControl()).isEqualTo(TIME_CONTROL);
-            assertThat(published.getInitialTimeSeconds()).isEqualTo(180);
-            assertThat(published.getIncrementSeconds()).isEqualTo(2);
-        }
-
-        @Test
-        void usesDefaultRatingWhenNull() {
-            PlayerQueuedDto dto = PlayerQueuedDto.builder()
-                    .userId(USER_1)
-                    .timeControl(TIME_CONTROL)
-                    .rating(null)
-                    .build();
-            when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(0.0);
-            when(queueService.findMatchForPlayer(any())).thenReturn(null);
-
-            service.onPlayerQueued(dto);
-
-            ArgumentCaptor<PlayerQueuedDto> addCaptor = ArgumentCaptor.forClass(PlayerQueuedDto.class);
-            verify(queueService).addPlayerToQueue(addCaptor.capture());
-            assertThat(addCaptor.getValue().getRating()).isEqualTo(0.0);
-        }
+        assertThat(returned).isEqualTo(requestId);
+        verify(requestStore).enrichQueuedRequest(eq(requestId), eq(TimeControlType.BLITZ.name()), eq(1500.0), eq(120.0));
+        verify(auditRepository).upsertQueued(
+                eq(UUID.fromString(requestId)),
+                eq(userId),
+                eq(TimeControlType.BLITZ.name()),
+                eq(180),
+                eq(2),
+                eq(true),
+                eq(1500.0),
+                eq(120.0),
+                eq("rid"),
+                eq("idem")
+        );
+        verify(eventPublisher, never()).publishMatchFound(any(MatchFoundDto.class));
+        verify(requestStore, never()).markMatched(anyString(), anyString());
     }
 
-    @Nested
-    @DisplayName("onPlayerDequeued")
-    class OnPlayerDequeued {
+    @Test
+    void join_whenMatched_marksMatched_publishesEvent_andAuditsMatched() {
+        UUID userId = UUID.randomUUID();
+        String requestId = UUID.randomUUID().toString();
+        String otherRequestId = UUID.randomUUID().toString();
+        UUID otherUserId = UUID.randomUUID();
 
-        @Test
-        void removesPlayerFromQueue() {
-            PlayerDequeuedDto dto = PlayerDequeuedDto.builder()
-                    .userId(USER_1)
-                    .timeControl(TIME_CONTROL)
-                    .reason("cancelled")
-                    .build();
+        when(requestStore.createOrGetActiveRequest(eq(userId), eq(180), eq(2), eq(true), eq(null), eq(null)))
+                .thenReturn(requestId);
+        when(timeControlClassifier.classify(180, 2)).thenReturn(TimeControlType.BLITZ);
+        when(userRatingsClient.fetchRating(eq(userId), eq(TimeControlType.BLITZ.name())))
+                .thenReturn(new UserRatingsClient.RatingInfo(TimeControlType.BLITZ.name(), 1500.0, 120.0));
+        when(auditRepositoryProvider.getIfAvailable()).thenReturn(auditRepository);
 
-            service.onPlayerDequeued(dto);
+        MatchmakingRequestStore.StoredRequest initial = new MatchmakingRequestStore.StoredRequest(
+                requestId, userId.toString(), "QUEUED", null, null,
+                "180", "2", "true", null, null, String.valueOf(System.currentTimeMillis())
+        );
+        MatchmakingRequestStore.StoredRequest enriched = new MatchmakingRequestStore.StoredRequest(
+                requestId, userId.toString(), "QUEUED", null, TimeControlType.BLITZ.name(),
+                "180", "2", "true", "1500.0", "120.0", String.valueOf(System.currentTimeMillis())
+        );
+        when(requestStore.getRequest(requestId)).thenReturn(initial, enriched);
 
-            ArgumentCaptor<PlayerDequeuedDto> captor = ArgumentCaptor.forClass(PlayerDequeuedDto.class);
-            verify(queueService).removePlayerFromQueue(captor.capture());
-            assertThat(captor.getValue().getUserId()).isEqualTo(USER_1);
-            assertThat(captor.getValue().getTimeControl()).isEqualTo(TIME_CONTROL);
-        }
+        when(matchmakingEngine.enqueueAndTryMatch(anyString(), anyString(), anyDouble(), anyInt(), anyInt(), anyInt(), anyLong()))
+                .thenReturn(new RedisMatchmakingEngine.MatchPair(requestId, otherRequestId));
+
+        when(requestStore.getRequest(otherRequestId)).thenReturn(new MatchmakingRequestStore.StoredRequest(
+                otherRequestId, otherUserId.toString(), "QUEUED", null, TimeControlType.BLITZ.name(),
+                "180", "2", "true", "1510.0", "110.0", String.valueOf(System.currentTimeMillis())
+        ));
+
+        service.join(userId, 180, 2, true, null, null);
+
+        ArgumentCaptor<String> gameIdCaptor = ArgumentCaptor.forClass(String.class);
+        verify(requestStore, times(2)).markMatched(anyString(), gameIdCaptor.capture());
+        String gameId = gameIdCaptor.getAllValues().get(0);
+        assertThat(gameId).isNotBlank();
+
+        ArgumentCaptor<MatchFoundDto> eventCaptor = ArgumentCaptor.forClass(MatchFoundDto.class);
+        verify(eventPublisher).publishMatchFound(eventCaptor.capture());
+        MatchFoundDto event = eventCaptor.getValue();
+
+        assertThat(event.getMatchId()).isEqualTo(gameId);
+        assertThat(event.getTimeControl()).isEqualTo(TimeControlType.BLITZ.name());
+        assertThat(event.getInitialTimeSeconds()).isEqualTo(180);
+        assertThat(event.getIncrementSeconds()).isEqualTo(2);
+        assertThat(event.getRated()).isTrue();
+        assertThat(event.getWhitePlayerId()).isIn(userId.toString(), otherUserId.toString());
+        assertThat(event.getBlackPlayerId()).isIn(userId.toString(), otherUserId.toString());
+        assertThat(event.getWhitePlayerId()).isNotEqualTo(event.getBlackPlayerId());
+
+        verify(auditRepository).markMatched(eq(UUID.fromString(requestId)), eq(UUID.fromString(gameId)));
+        verify(auditRepository).markMatched(eq(UUID.fromString(otherRequestId)), eq(UUID.fromString(gameId)));
     }
 
-    @Nested
-    @DisplayName("processMatchmaking")
-    class ProcessMatchmaking {
+    @Test
+    void leave_forOtherUser_throwsForbidden() {
+        UUID userId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+        String requestId = UUID.randomUUID().toString();
 
-        @Test
-        void doesNothingWhenNoPlayersInQueue() {
-            service.processMatchmaking();
+        when(requestStore.getRequest(requestId)).thenReturn(new MatchmakingRequestStore.StoredRequest(
+                requestId, ownerId.toString(), "QUEUED", null, "BLITZ",
+                "180", "2", "true", "1500.0", "120.0", String.valueOf(System.currentTimeMillis())
+        ));
 
-            verify(queueService, never()).getPlayerRating(anyString(), anyString());
-            verify(queueService, never()).findMatchForPlayer(any(com.chess.matchmaking.dto.FindMatchRequest.class));
-        }
+        assertThatThrownBy(() -> service.leave(userId, requestId, "idem", "rid"))
+                .isInstanceOf(ForbiddenException.class);
 
-        @Test
-        void expandsRangeAndTriesMatchmakingForQueuedPlayers() {
-            service.onPlayerQueued(PlayerQueuedDto.builder()
-                    .userId(USER_1)
-                    .timeControl(TIME_CONTROL)
-                    .rating(RATING)
-                    .build());
-            when(queueService.findMatchForPlayer(any())).thenReturn(null);
-            when(queueService.getPlayerRating(USER_1, TIME_CONTROL)).thenReturn(RATING);
+        verify(requestStore, never()).cancelRequest(any(), anyString(), anyString(), anyString());
+        verify(matchmakingEngine, never()).removeFromQueues(anyString(), anyString());
+    }
 
-            service.processMatchmaking();
+    @Test
+    void leave_cancelsRequest_removesFromQueues_andAuditsCancelled() {
+        UUID userId = UUID.randomUUID();
+        String requestId = UUID.randomUUID().toString();
 
-            verify(queueService, org.mockito.Mockito.atLeast(1)).getPlayerRating(USER_1, TIME_CONTROL);
-            verify(queueService, org.mockito.Mockito.atLeast(1))
-                    .findMatchForPlayer(any(com.chess.matchmaking.dto.FindMatchRequest.class));
-        }
+        when(requestStore.getRequest(requestId)).thenReturn(new MatchmakingRequestStore.StoredRequest(
+                requestId, userId.toString(), "QUEUED", null, "BLITZ",
+                "180", "2", "true", "1500.0", "120.0", String.valueOf(System.currentTimeMillis())
+        ));
+        when(auditRepositoryProvider.getIfAvailable()).thenReturn(auditRepository);
+
+        service.leave(userId, requestId, "idem", "rid");
+
+        verify(matchmakingEngine).removeFromQueues(eq("BLITZ"), eq(requestId));
+        verify(requestStore).cancelRequest(eq(userId), eq(requestId), eq("idem"), eq("rid"));
+        verify(auditRepository).markCancelled(eq(UUID.fromString(requestId)), eq("cancelled"));
     }
 }
+
