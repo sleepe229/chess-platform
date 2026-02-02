@@ -293,3 +293,17 @@ services:
         condition: service_started
     networks:
       - chess-network
+
+  chess-frontend:
+    build:
+      context: ..
+      dockerfile: chess-frontend/Dockerfile
+    container_name: chess-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      chess-api-gateway:
+        condition: service_started
+    networks:
+      - chess-network
