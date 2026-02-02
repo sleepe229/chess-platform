@@ -2,6 +2,8 @@ package com.chess.auth.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
+import io.nats.client.JetStream;
+import io.nats.client.impl.Headers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,13 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthEventPublisher")
@@ -28,13 +34,18 @@ class AuthEventPublisherTest {
     @Mock
     private Connection natsConnection;
 
+    @Mock
+    private JetStream jetStream;
+
     private ObjectMapper objectMapper;
     private AuthEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        publisher = new AuthEventPublisher(natsConnection, objectMapper);
+        publisher = new AuthEventPublisher(objectMapper);
+        ReflectionTestUtils.setField(publisher, "natsConnection", natsConnection);
+        ReflectionTestUtils.setField(publisher, "jetStream", jetStream);
     }
 
     @Nested
@@ -43,11 +54,12 @@ class AuthEventPublisherTest {
 
         @Test
         void doesNotPublishWhenConnectionIsNull() {
-            AuthEventPublisher publisherWithNullConnection = new AuthEventPublisher(null, objectMapper);
+            ReflectionTestUtils.setField(publisher, "natsConnection", null);
 
-            publisherWithNullConnection.publishUserRegistered(USER_ID, EMAIL);
+            publisher.publishUserRegistered(USER_ID, EMAIL);
 
             verify(natsConnection, never()).publish(any(), any(byte[].class));
+            verifyNoInteractions(jetStream);
         }
 
         @Test
@@ -57,6 +69,7 @@ class AuthEventPublisherTest {
             publisher.publishUserRegistered(USER_ID, EMAIL);
 
             verify(natsConnection, never()).publish(any(), any(byte[].class));
+            verifyNoInteractions(jetStream);
         }
 
         @Test
@@ -67,11 +80,13 @@ class AuthEventPublisherTest {
 
             ArgumentCaptor<byte[]> payloadCaptor = ArgumentCaptor.forClass(byte[].class);
             ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);
-            verify(natsConnection).publish(subjectCaptor.capture(), payloadCaptor.capture());
+            ArgumentCaptor<Headers> headersCaptor = ArgumentCaptor.forClass(Headers.class);
+            verify(jetStream).publish(subjectCaptor.capture(), headersCaptor.capture(), payloadCaptor.capture());
 
             assertThat(subjectCaptor.getValue()).isEqualTo("domain.auth.UserRegistered");
             String json = new String(payloadCaptor.getValue());
             assertThat(json).contains(USER_ID.toString()).contains(EMAIL);
+            assertThat(headersCaptor.getValue().getFirst("Nats-Msg-Id")).isNotBlank();
         }
     }
 }

@@ -71,3 +71,8 @@ node_modules
 
 docker/.env
 amplicode.xml
+
+# Logs
+*.log
+*.log.*
+**/logs/

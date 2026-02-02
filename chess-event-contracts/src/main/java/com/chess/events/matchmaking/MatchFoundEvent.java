@@ -1,20 +1,17 @@
 package com.chess.events.matchmaking;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class MatchFoundEvent extends DomainEvent {
+public class MatchFoundEvent {
 
     @NotBlank
     private String gameId;
@@ -35,9 +32,4 @@ public class MatchFoundEvent extends DomainEvent {
     private Integer incrementSeconds;
 
     private Boolean rated;
-
-    @Override
-    public String getAggregateId() {
-        return gameId;
-    }
 }

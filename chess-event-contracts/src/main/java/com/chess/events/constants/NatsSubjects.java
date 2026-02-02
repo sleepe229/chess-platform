@@ -10,7 +10,7 @@ public final class NatsSubjects {
     public static final String AUTH_USER_REGISTERED = "domain.auth.UserRegistered";
 
     // User Events
-    public static final String USER_RATING_UPDATED = "domain.user.RatingUpdated";
+    public static final String USER_RATING_UPDATED = "domain.users.RatingUpdated";
 
     // Matchmaking Events
     public static final String MATCHMAKING_PLAYER_QUEUED = "domain.matchmaking.PlayerQueued";

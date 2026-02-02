@@ -1,25 +1,38 @@
 package com.chess.auth.messaging;
 
 import com.chess.events.auth.UserRegisteredEvent;
+import com.chess.events.common.EventEnvelope;
 import com.chess.events.constants.NatsSubjects;
 import com.chess.events.util.EventBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
+import io.nats.client.JetStream;
+import io.nats.client.impl.Headers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AuthEventPublisher {
 
-    private final Connection natsConnection;
     private final ObjectMapper objectMapper;
+
+    @Autowired(required = false)
+    private Connection natsConnection;
+
+    @Autowired(required = false)
+    private JetStream jetStream;
+
+    public AuthEventPublisher(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Retryable(
             retryFor = {Exception.class},
@@ -33,14 +46,24 @@ public class AuthEventPublisher {
                 return;
             }
 
-            UserRegisteredEvent event = UserRegisteredEvent.builder()
+            UserRegisteredEvent payload = UserRegisteredEvent.builder()
                     .userId(userId.toString())
                     .email(email)
                     .build();
-            EventBuilder.enrichEvent(event, "auth-service");
+            EventEnvelope<UserRegisteredEvent> event = EventBuilder.envelope("UserRegistered", "auth-service", payload);
 
             String eventJson = objectMapper.writeValueAsString(event);
-            natsConnection.publish(NatsSubjects.AUTH_USER_REGISTERED, eventJson.getBytes());
+            Headers headers = new Headers();
+            headers.put("Nats-Msg-Id", event.getEventId());
+            if (event.getCorrelationId() != null) {
+                headers.put("X-Correlation-Id", event.getCorrelationId());
+            }
+
+            if (jetStream != null) {
+                jetStream.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
+            } else {
+                natsConnection.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
+            }
 
             log.info("Published UserRegistered event for userId: {}", userId);
         } catch (Exception e) {

@@ -1,19 +1,16 @@
 package com.chess.events.analytics;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class AnalysisFailedEvent extends DomainEvent {
+public class AnalysisFailedEvent {
 
     @NotBlank
     private String analysisJobId;
@@ -23,9 +20,4 @@ public class AnalysisFailedEvent extends DomainEvent {
 
     @NotBlank
     private String errorMessage;
-
-    @Override
-    public String getAggregateId() {
-        return analysisJobId;
-    }
 }

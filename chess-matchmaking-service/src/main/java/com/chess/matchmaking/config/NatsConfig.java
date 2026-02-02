@@ -1,10 +1,15 @@
 package com.chess.matchmaking.config;
 
+import com.chess.events.constants.NatsSubjects;
 import io.nats.client.Connection;
 import io.nats.client.ConnectionListener;
 import io.nats.client.ErrorListener;
+import io.nats.client.JetStream;
+import io.nats.client.JetStreamManagement;
 import io.nats.client.Nats;
 import io.nats.client.Options;
+import io.nats.client.api.StorageType;
+import io.nats.client.api.StreamConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -80,6 +85,7 @@ public class NatsConfig {
 
             Connection connection = Nats.connect(options);
             log.info("Connected to NATS server: {}", natsUrl);
+            initializeStreams(connection);
             return connection;
         } catch (IOException | InterruptedException e) {
             log.error("Failed to connect to NATS server: {}", natsUrl, e);
@@ -87,6 +93,52 @@ public class NatsConfig {
                 Thread.currentThread().interrupt();
             }
             throw new RuntimeException("Failed to initialize NATS connection", e);
+        }
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "nats.enabled", havingValue = "true", matchIfMissing = true)
+    public JetStream jetStream(Connection connection) {
+        try {
+            return connection.jetStream();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize JetStream", e);
+        }
+    }
+
+    private void initializeStreams(Connection connection) {
+        try {
+            JetStreamManagement jsm = connection.jetStreamManagement();
+            ensureStream(jsm, NatsSubjects.STREAM_MATCHMAKING, new String[]{
+                    NatsSubjects.MATCHMAKING_PLAYER_QUEUED,
+                    NatsSubjects.MATCHMAKING_PLAYER_DEQUEUED,
+                    NatsSubjects.MATCHMAKING_MATCH_FOUND
+            });
+        } catch (Exception e) {
+            log.warn("Failed to initialize JetStream streams (matchmaking-service). NATS will still run without persistence.", e);
+        }
+    }
+
+    private void ensureStream(JetStreamManagement jsm, String streamName, String[] subjects) {
+        boolean exists;
+        try {
+            jsm.getStreamInfo(streamName);
+            exists = true;
+        } catch (Exception ignored) {
+            exists = false;
+        }
+        if (exists) {
+            return;
+        }
+        try {
+            jsm.addStream(StreamConfiguration.builder()
+                    .name(streamName)
+                    .storageType(StorageType.File)
+                    .subjects(subjects)
+                    .build());
+            log.info("Created JetStream stream: {} subjects={}", streamName, String.join(",", subjects));
+        } catch (Exception e) {
+            log.info("JetStream stream {} already exists (or creation raced): {}", streamName, e.getMessage());
         }
     }
 }
