@@ -1,20 +1,17 @@
 package com.chess.events.game;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class MoveMadeEvent extends DomainEvent {
+public class MoveMadeEvent {
 
     @NotBlank
     private String gameId;
@@ -52,9 +49,4 @@ public class MoveMadeEvent extends DomainEvent {
     private Boolean isCheckmate;
     private Boolean isStalemate;
     private Boolean isDraw;
-
-    @Override
-    public String getAggregateId() {
-        return gameId;
-    }
 }

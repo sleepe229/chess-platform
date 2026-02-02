@@ -56,6 +56,9 @@ public class MatchmakingService {
         double rating = enriched != null && enriched.rating() != null ? Double.parseDouble(enriched.rating()) : 0.0;
         Double ratingDeviation = enriched != null && enriched.ratingDeviation() != null ? Double.valueOf(enriched.ratingDeviation()) : null;
 
+        // Publish queued (idempotent via deterministic Nats-Msg-Id)
+        eventPublisher.publishPlayerQueued(requestId, userId, timeControlType.name(), baseSeconds, incrementSeconds, rated);
+
         MatchmakingAuditRepository audit = auditRepositoryProvider.getIfAvailable();
         if (audit != null) {
             try {
@@ -98,6 +101,14 @@ public class MatchmakingService {
                 String white = whiteFirst ? r1.userId() : r2.userId();
                 String black = whiteFirst ? r2.userId() : r1.userId();
 
+                // Dequeued due to match
+                try {
+                    eventPublisher.publishPlayerDequeued(pair.requestId1(), UUID.fromString(r1.userId()), "MATCHED");
+                    eventPublisher.publishPlayerDequeued(pair.requestId2(), UUID.fromString(r2.userId()), "MATCHED");
+                } catch (Exception ignored) {
+                    // best-effort
+                }
+
                 eventPublisher.publishMatchFound(MatchFoundDto.builder()
                         .matchId(gameId)
                         .whitePlayerId(white)
@@ -134,6 +145,12 @@ public class MatchmakingService {
             matchmakingEngine.removeFromQueues(req.timeControlType(), requestId);
         }
         requestStore.cancelRequest(userId, requestId, idempotencyKey, requestIdHeader);
+
+        // Dequeued due to user cancellation (best-effort)
+        try {
+            eventPublisher.publishPlayerDequeued(requestId, userId, "CANCELLED");
+        } catch (Exception ignored) {
+        }
 
         MatchmakingAuditRepository audit = auditRepositoryProvider.getIfAvailable();
         if (audit != null) {

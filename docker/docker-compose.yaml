@@ -223,6 +223,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
+      GAME_SERVICE_BASE_URL: http://chess-game-service:8084
     ports:
       - "${WS_SERVICE_PORT}:8085"
     depends_on:

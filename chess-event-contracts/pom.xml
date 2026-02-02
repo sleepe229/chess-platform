@@ -44,6 +44,12 @@
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
+        <!-- SLF4J (for MDC correlation id propagation) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

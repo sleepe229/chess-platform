@@ -1,5 +1,6 @@
 package com.chess.gateway.handler;
 
+import com.chess.common.dto.ErrorResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -13,8 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
 @Slf4j
 @Component
@@ -36,11 +36,12 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
         log.error("Gateway error [traceId={}]: {}", traceId, message, ex);
 
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error", errorCode);
-        errorResponse.put("message", message);
-        errorResponse.put("traceId", traceId != null ? traceId : "");
-        errorResponse.put("details", new HashMap<>());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error(errorCode)
+                .message(message)
+                .traceId(traceId != null ? traceId : "")
+                .details(Collections.emptyMap())
+                .build();
 
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
@@ -51,7 +52,8 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
             return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize error response", e);
-            byte[] fallback = "{\"error\":\"INTERNAL_SERVER_ERROR\",\"message\":\"An error occurred\",\"traceId\":\"\",\"details\":{}}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            byte[] fallback = "{\"error\":\"INTERNAL_SERVER_ERROR\",\"message\":\"An error occurred\",\"traceId\":\"\",\"details\":{}}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8);
             return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(fallback)));
         }
     }

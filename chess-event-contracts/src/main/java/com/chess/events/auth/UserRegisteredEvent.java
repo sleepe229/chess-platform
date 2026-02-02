@@ -1,20 +1,17 @@
 package com.chess.events.auth;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class UserRegisteredEvent extends DomainEvent {
+public class UserRegisteredEvent {
 
     @NotBlank
     private String userId;
@@ -22,9 +19,4 @@ public class UserRegisteredEvent extends DomainEvent {
     @NotBlank
     @Email
     private String email;
-
-    @Override
-    public String getAggregateId() {
-        return userId;
-    }
 }

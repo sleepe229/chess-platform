@@ -6,6 +6,7 @@ import com.chess.matchmaking.dto.MatchmakingStatus;
 import com.chess.matchmaking.repo.MatchmakingAuditRepository;
 import com.chess.matchmaking.repo.MatchmakingRequestStore;
 import com.chess.matchmaking.repo.RedisMatchmakingEngine;
+import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,6 +25,7 @@ public class MatchmakingExpiryJob {
     private final RedisMatchmakingEngine matchmakingEngine;
     private final MatchmakingRequestStore requestStore;
     private final MatchmakingProperties properties;
+    private final MatchmakingEventPublisher eventPublisher;
     private final ObjectProvider<MatchmakingAuditRepository> auditRepositoryProvider;
 
     @Scheduled(fixedDelayString = "${matchmaking.expire-scan-interval-ms:5000}")
@@ -51,6 +53,11 @@ public class MatchmakingExpiryJob {
 
                 matchmakingEngine.removeFromQueues(tct.name(), requestId);
                 requestStore.markExpired(requestId);
+
+                try {
+                    eventPublisher.publishPlayerDequeued(requestId, UUID.fromString(req.userId()), "EXPIRED");
+                } catch (Exception ignored) {
+                }
 
                 MatchmakingAuditRepository audit = auditRepositoryProvider.getIfAvailable();
                 if (audit != null) {
