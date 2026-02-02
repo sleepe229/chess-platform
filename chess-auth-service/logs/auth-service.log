@@ -97,3 +97,602 @@
 2026-02-02 18:47:22 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
 2026-02-02 18:47:22 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
 2026-02-02 18:47:22 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 18:58:16 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 42958 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 18:58:16 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 18:58:16 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 18:58:16 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.329 seconds (process running for 1.928)
+2026-02-02 18:58:16 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 4d241f08-6d1f-4a0b-a51c-6dbd724479c5
+2026-02-02 18:58:16 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 4d241f08-6d1f-4a0b-a51c-6dbd724479c5
+2026-02-02 18:58:16 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 4d241f08-6d1f-4a0b-a51c-6dbd724479c5
+2026-02-02 18:58:16 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 67bfe406-0ede-4e84-9640-e38c5856ad22
+2026-02-02 18:58:16 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 18:58:16 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 18:58:16 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:01:57 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 43801 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:01:57 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:01:57 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:01:57 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.352 seconds (process running for 1.959)
+2026-02-02 19:01:57 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 349eeabd-4875-41e4-9c70-953244a328c1
+2026-02-02 19:01:57 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 349eeabd-4875-41e4-9c70-953244a328c1
+2026-02-02 19:01:57 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 349eeabd-4875-41e4-9c70-953244a328c1
+2026-02-02 19:01:57 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: d0fef7e4-8531-4860-9681-a6ef37016422
+2026-02-02 19:01:57 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:01:57 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:01:57 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:05:26 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 44903 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:05:26 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:05:26 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:05:26 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.316 seconds (process running for 1.897)
+2026-02-02 19:05:26 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: d6b7d6e7-fb02-42f4-bc60-54da0542d62a
+2026-02-02 19:05:26 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: d6b7d6e7-fb02-42f4-bc60-54da0542d62a
+2026-02-02 19:05:26 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: d6b7d6e7-fb02-42f4-bc60-54da0542d62a
+2026-02-02 19:05:26 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 9e045851-2eb7-4007-b843-092e0f1eed71
+2026-02-02 19:05:26 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:05:26 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:05:26 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:06:43 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 45273 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:06:43 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:06:43 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:06:43 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.324 seconds (process running for 2.09)
+2026-02-02 19:06:43 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 424dad47-6721-4b50-a964-8b29e0a2cb21
+2026-02-02 19:06:43 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 424dad47-6721-4b50-a964-8b29e0a2cb21
+2026-02-02 19:06:43 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 424dad47-6721-4b50-a964-8b29e0a2cb21
+2026-02-02 19:06:43 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 89efcc49-9819-437f-bac6-84c53d345b36
+2026-02-02 19:06:43 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:06:43 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:06:43 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:09:34 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 45658 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:09:34 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:09:34 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:09:35 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.33 seconds (process running for 1.978)
+2026-02-02 19:09:35 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 0f27b3af-670d-46c8-8ee9-bc3b180f9576
+2026-02-02 19:09:35 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 0f27b3af-670d-46c8-8ee9-bc3b180f9576
+2026-02-02 19:09:35 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 0f27b3af-670d-46c8-8ee9-bc3b180f9576
+2026-02-02 19:09:35 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 2723cdc3-4157-43c0-a912-6c7c975ef05b
+2026-02-02 19:09:35 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:09:35 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:09:35 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:09:36 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - Starting AuthServiceIT using Java 21.0.9 with PID 45730 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:09:36 [main] DEBUG com.chess.auth.it.AuthServiceIT [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:09:36 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - The following 1 profile is active: "it"
+2026-02-02 19:09:36 [main] INFO  o.testcontainers.DockerClientFactory [traceId=] - Testcontainers version: 2.0.3
+2026-02-02 19:09:37 [main] INFO  o.t.d.DockerClientProviderStrategy [traceId=] - Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
+2026-02-02 19:09:37 [main] WARN  o.s.b.w.s.s.c.AnnotationConfigServletWebServerApplicationContext [traceId=] - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanDefinitionStoreException: Failed to process import candidates for configuration class [com.chess.auth.AuthServiceApplication]: Error processing condition on org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseConfiguration
+2026-02-02 19:09:37 [main] INFO  o.s.b.a.l.ConditionEvaluationReportLogger [traceId=] - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-02-02 19:09:37 [main] ERROR o.s.boot.SpringApplication [traceId=] - Application run failed
+org.springframework.beans.factory.BeanDefinitionStoreException: Failed to process import candidates for configuration class [com.chess.auth.AuthServiceApplication]: Error processing condition on org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseConfiguration
+	at org.springframework.context.annotation.ConfigurationClassParser.processImports(ConfigurationClassParser.java:644)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorGroupingHandler.lambda$processGroupImports$0(ConfigurationClassParser.java:864)
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorGroupingHandler.processGroupImports(ConfigurationClassParser.java:860)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorHandler.process(ConfigurationClassParser.java:831)
+	at org.springframework.context.annotation.ConfigurationClassParser.parse(ConfigurationClassParser.java:200)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:446)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:310)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:794)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:602)
+	at org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
+	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
+	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
+	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:214)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
+	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
+	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
+	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$before$0(ClassBasedTestDescriptor.java:240)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:239)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:88)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:173)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:93)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$0(InterceptingLauncher.java:41)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:40)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: java.lang.IllegalStateException: Error processing condition on org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseConfiguration
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:60)
+	at org.springframework.context.annotation.ConditionEvaluator.shouldSkip(ConditionEvaluator.java:100)
+	at org.springframework.context.annotation.ConfigurationClassParser.processConfigurationClass(ConfigurationClassParser.java:249)
+	at org.springframework.context.annotation.ConfigurationClassParser.processMemberClasses(ConfigurationClassParser.java:428)
+	at org.springframework.context.annotation.ConfigurationClassParser.doProcessConfigurationClass(ConfigurationClassParser.java:309)
+	at org.springframework.context.annotation.ConfigurationClassParser.processConfigurationClass(ConfigurationClassParser.java:283)
+	at org.springframework.context.annotation.ConfigurationClassParser.processImports(ConfigurationClassParser.java:634)
+	... 101 common frames omitted
+Caused by: java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
+	at org.testcontainers.shaded.com.google.common.base.Preconditions.checkState(Preconditions.java:513)
+	at org.testcontainers.containers.ContainerState.getMappedPort(ContainerState.java:161)
+	at org.testcontainers.containers.PostgreSQLContainer.getJdbcUrl(PostgreSQLContainer.java:102)
+	at org.springframework.util.function.SupplierUtils.resolve(SupplierUtils.java:54)
+	at org.springframework.test.context.support.DynamicValuesPropertySource.getProperty(DynamicValuesPropertySource.java:65)
+	at org.springframework.core.env.PropertySourcesPropertyResolver.getProperty(PropertySourcesPropertyResolver.java:80)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver$DefaultResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:135)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.findPropertyValue(ConfigurationPropertySourcesPropertyResolver.java:109)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:78)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:64)
+	at org.springframework.core.env.AbstractEnvironment.getProperty(AbstractEnvironment.java:552)
+	at org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseCondition.hasDataSourceUrlProperty(DataSourceAutoConfiguration.java:163)
+	at org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseCondition.getMatchOutcome(DataSourceAutoConfiguration.java:142)
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:47)
+	... 107 common frames omitted
+2026-02-02 19:09:37 [main] WARN  o.s.test.context.TestContextManager [traceId=] - Caught exception while allowing TestExecutionListener [org.springframework.test.context.support.DependencyInjectionTestExecutionListener] to prepare test instance [com.chess.auth.it.AuthServiceIT@6736f40f]
+java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@34f23816 testClass = com.chess.auth.it.AuthServiceIT, locations = [], classes = [com.chess.auth.AuthServiceApplication], contextInitializerClasses = [], activeProfiles = ["it"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true", "server.port=0"], contextCustomizers = [org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizer@1c32886a, org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@1494b84d, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@76318a7d, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@585811a4, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@3ea49310, org.springframework.boot.testcontainers.service.connection.ServiceConnectionContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@717fc70d], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:195)
+	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:214)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
+	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:128)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
+	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
+	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:205)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$1(ClassBasedTestDescriptor.java:423)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.executeAndMaskThrowable(ClassBasedTestDescriptor.java:428)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeTestInstancePostProcessors$0(ClassBasedTestDescriptor.java:422)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1708)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeTestInstancePostProcessors(ClassBasedTestDescriptor.java:422)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$instantiateAndPostProcessTestInstance$0(ClassBasedTestDescriptor.java:334)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.instantiateAndPostProcessTestInstance(ClassBasedTestDescriptor.java:333)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$1(ClassBasedTestDescriptor.java:322)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$testInstancesProvider$0(ClassBasedTestDescriptor.java:321)
+	at org.junit.jupiter.engine.execution.TestInstancesProvider.getTestInstances(TestInstancesProvider.java:27)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$before$0(ClassBasedTestDescriptor.java:240)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:239)
+	at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:88)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:173)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:42)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$2(NodeTestTask.java:180)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$1(NodeTestTask.java:166)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$0(NodeTestTask.java:164)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:74)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:163)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:116)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:36)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:52)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:246)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:218)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:179)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:108)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:66)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:157)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:65)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:125)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:93)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$0(InterceptingLauncher.java:41)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:40)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:48)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: org.springframework.beans.factory.BeanDefinitionStoreException: Failed to process import candidates for configuration class [com.chess.auth.AuthServiceApplication]: Error processing condition on org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseConfiguration
+	at org.springframework.context.annotation.ConfigurationClassParser.processImports(ConfigurationClassParser.java:644)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorGroupingHandler.lambda$processGroupImports$0(ConfigurationClassParser.java:864)
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorGroupingHandler.processGroupImports(ConfigurationClassParser.java:860)
+	at org.springframework.context.annotation.ConfigurationClassParser$DeferredImportSelectorHandler.process(ConfigurationClassParser.java:831)
+	at org.springframework.context.annotation.ConfigurationClassParser.parse(ConfigurationClassParser.java:200)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:446)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:310)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:794)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:602)
+	at org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:143)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:756)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:445)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:321)
+	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$2(SpringBootContextLoader.java:156)
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58)
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46)
+	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1465)
+	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:605)
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:156)
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:115)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:247)
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:167)
+	... 77 common frames omitted
+Caused by: java.lang.IllegalStateException: Error processing condition on org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseConfiguration
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:60)
+	at org.springframework.context.annotation.ConditionEvaluator.shouldSkip(ConditionEvaluator.java:100)
+	at org.springframework.context.annotation.ConfigurationClassParser.processConfigurationClass(ConfigurationClassParser.java:249)
+	at org.springframework.context.annotation.ConfigurationClassParser.processMemberClasses(ConfigurationClassParser.java:428)
+	at org.springframework.context.annotation.ConfigurationClassParser.doProcessConfigurationClass(ConfigurationClassParser.java:309)
+	at org.springframework.context.annotation.ConfigurationClassParser.processConfigurationClass(ConfigurationClassParser.java:283)
+	at org.springframework.context.annotation.ConfigurationClassParser.processImports(ConfigurationClassParser.java:634)
+	... 101 common frames omitted
+Caused by: java.lang.IllegalStateException: Mapped port can only be obtained after the container is started
+	at org.testcontainers.shaded.com.google.common.base.Preconditions.checkState(Preconditions.java:513)
+	at org.testcontainers.containers.ContainerState.getMappedPort(ContainerState.java:161)
+	at org.testcontainers.containers.PostgreSQLContainer.getJdbcUrl(PostgreSQLContainer.java:102)
+	at org.springframework.util.function.SupplierUtils.resolve(SupplierUtils.java:54)
+	at org.springframework.test.context.support.DynamicValuesPropertySource.getProperty(DynamicValuesPropertySource.java:65)
+	at org.springframework.core.env.PropertySourcesPropertyResolver.getProperty(PropertySourcesPropertyResolver.java:80)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver$DefaultResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:135)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.findPropertyValue(ConfigurationPropertySourcesPropertyResolver.java:109)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:78)
+	at org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty(ConfigurationPropertySourcesPropertyResolver.java:64)
+	at org.springframework.core.env.AbstractEnvironment.getProperty(AbstractEnvironment.java:552)
+	at org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseCondition.hasDataSourceUrlProperty(DataSourceAutoConfiguration.java:163)
+	at org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration$EmbeddedDatabaseCondition.getMatchOutcome(DataSourceAutoConfiguration.java:142)
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:47)
+	... 107 common frames omitted
+2026-02-02 19:10:17 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 45958 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:10:17 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:10:17 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:10:17 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.345 seconds (process running for 2.053)
+2026-02-02 19:10:17 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 70ebd6a8-ac7a-49cb-9e16-2700e16cf31f
+2026-02-02 19:10:17 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 70ebd6a8-ac7a-49cb-9e16-2700e16cf31f
+2026-02-02 19:10:17 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 70ebd6a8-ac7a-49cb-9e16-2700e16cf31f
+2026-02-02 19:10:17 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 3fcb6de5-6d44-4173-97f8-4d3ced4abfa4
+2026-02-02 19:10:17 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:10:17 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:10:17 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:11:07 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - Starting AuthServiceIT using Java 21.0.9 with PID 46037 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:11:07 [main] DEBUG com.chess.auth.it.AuthServiceIT [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:11:07 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - The following 1 profile is active: "it"
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Finished Spring Data repository scanning in 65 ms. Found 2 JPA repository interfaces.
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport [traceId=] - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.chess.auth.repo.RefreshTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport [traceId=] - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.chess.auth.repo.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-02-02 19:11:08 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Finished Spring Data repository scanning in 6 ms. Found 0 Redis repository interfaces.
+2026-02-02 19:11:08 [main] INFO  o.s.boot.tomcat.TomcatWebServer [traceId=] - Tomcat initialized with port 0 (http)
+2026-02-02 19:11:08 [main] INFO  o.a.catalina.core.StandardService [traceId=] - Starting service [Tomcat]
+2026-02-02 19:11:08 [main] INFO  o.a.catalina.core.StandardEngine [traceId=] - Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-02-02 19:11:08 [main] INFO  o.s.b.w.c.s.WebApplicationContextInitializer [traceId=] - Root WebApplicationContext: initialization completed in 1182 ms
+2026-02-02 19:11:09 [main] INFO  com.chess.auth.config.JwtConfig [traceId=] - JWT Token Provider initialized with access token validity: 60000ms, refresh token validity: 300000ms
+2026-02-02 19:11:09 [main] DEBUG c.c.a.s.JwtAuthenticationFilter [traceId=] - Filter 'jwtAuthenticationFilter' configured for use
+2026-02-02 19:11:09 [main] DEBUG c.c.auth.filter.RequestIdMdcFilter [traceId=] - Filter 'requestIdMdcFilter' configured for use
+2026-02-02 19:11:09 [main] DEBUG c.chess.auth.filter.RateLimitFilter [traceId=] - Filter 'rateLimitFilter' configured for use
+2026-02-02 19:11:09 [main] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Starting...
+2026-02-02 19:11:09 [main] INFO  com.zaxxer.hikari.pool.HikariPool [traceId=] - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@76ea1cb5
+2026-02-02 19:11:09 [main] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Start completed.
+2026-02-02 19:11:09 [main] INFO  org.flywaydb.core.FlywayExecutor [traceId=] - Database: jdbc:postgresql://localhost:32769/auth_it?loggerLevel=OFF (PostgreSQL 16.11)
+2026-02-02 19:11:09 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory [traceId=] - Schema history table "public"."flyway_schema_history" does not exist yet
+2026-02-02 19:11:09 [main] INFO  o.f.core.internal.command.DbValidate [traceId=] - Successfully validated 2 migrations (execution time 00:00.009s)
+2026-02-02 19:11:09 [main] INFO  org.flywaydb.core.Flyway [traceId=] - All configured schemas are empty; baseline operation skipped. A baseline or migration script with a lower version than the baseline version may execute if available. Check the Schemas parameter if this is not intended.
+2026-02-02 19:11:09 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory [traceId=] - Creating Schema History table "public"."flyway_schema_history" ...
+2026-02-02 19:11:09 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Current version of schema "public": << Empty Schema >>
+2026-02-02 19:11:09 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Migrating schema "public" to version "1 - create auth users"
+2026-02-02 19:11:09 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Migrating schema "public" to version "2 - create refresh tokens"
+2026-02-02 19:11:09 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Successfully applied 2 migrations to schema "public", now at version v2 (execution time 00:00.013s)
+2026-02-02 19:11:09 [main] INFO  org.hibernate.orm.jpa [traceId=] - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-02-02 19:11:09 [main] INFO  org.hibernate.orm.core [traceId=] - HHH000001: Hibernate ORM core version 7.2.1.Final
+2026-02-02 19:11:09 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo [traceId=] - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-02 19:11:09 [main] WARN  org.hibernate.orm.deprecation [traceId=] - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-02 19:11:09 [main] INFO  o.hibernate.orm.connections.pooling [traceId=] - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:32769/auth_it?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.11
+	Default catalog/schema: auth_it/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-02-02 19:11:10 [main] INFO  org.hibernate.orm.core [traceId=] - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-02 19:11:10 [main] INFO  org.hibernate.orm.jdbc.batch [traceId=] - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 20)
+2026-02-02 19:11:10 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [traceId=] - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-02 19:11:10 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories [traceId=] - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-02-02 19:11:10 [main] INFO  com.chess.auth.config.NatsConfig [traceId=] - Connected to NATS server: nats://localhost:32771
+2026-02-02 19:11:10 [pool-4-thread-1] INFO  com.chess.auth.config.NatsConfig [traceId=] - NATS connection established: nats://localhost:32771
+2026-02-02 19:11:11 [main] INFO  com.chess.auth.config.NatsConfig [traceId=] - Created JetStream stream: AUTH_EVENTS subjects=domain.auth.UserRegistered
+2026-02-02 19:11:11 [main] DEBUG o.s.s.c.a.a.c.AuthenticationConfiguration$DefaultPasswordEncoderAuthenticationManagerBuilder [traceId=] - No authenticationProviders and no parentAuthenticationManager defined. Returning null.
+2026-02-02 19:11:11 [main] DEBUG o.s.s.web.DefaultSecurityFilterChain [traceId=] - Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, LogoutFilter, RateLimitFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-02-02 19:11:11 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver [traceId=] - Exposing 4 endpoints beneath base path '/actuator'
+2026-02-02 19:11:11 [main] INFO  o.s.boot.tomcat.TomcatWebServer [traceId=] - Tomcat started on port 35079 (http) with context path '/'
+2026-02-02 19:11:11 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - Started AuthServiceIT in 4.108 seconds (process running for 53.695)
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] [traceId=] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet [traceId=] - Initializing Servlet 'dispatcherServlet'
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet [traceId=] - Completed initialization in 1 ms
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG o.s.security.web.FilterChainProxy [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - Securing POST /auth/register
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - Set SecurityContextHolder to anonymous SecurityContext
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG o.s.security.web.FilterChainProxy [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - Secured POST /auth/register
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  c.c.auth.controller.AuthController [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - POST /auth/register - email: it-user@mail.com
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  com.chess.auth.service.AuthService [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - Registering user with email: it-user@mail.com
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - 
+    select
+        u1_0.id 
+    from
+        auth_users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  com.chess.auth.service.AuthService [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - User registered successfully: userId=bbcf158f-a09a-4572-80c4-07abbd000a19, email=it-user@mail.com
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] INFO  c.c.a.messaging.AuthEventPublisher [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - Published UserRegistered event for userId: bbcf158f-a09a-4572-80c4-07abbd000a19
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - 
+    insert 
+    into
+        auth_users
+        (created_at, email, password_hash, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-02 19:11:12 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=e284b4bc-5bb2-4508-904b-3b6cc534dd2e] - 
+    insert 
+    into
+        user_roles
+        (user_id, role) 
+    values
+        (?, ?)
+2026-02-02 19:11:12 [main] WARN  o.j.j.e.d.AbstractExtensionContext [traceId=] - Type implements CloseableResource but not AutoCloseable: org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter
+2026-02-02 19:11:13 [pool-4-thread-1] ERROR com.chess.auth.config.NatsConfig [traceId=] - NATS exception occurred
+java.io.IOException: Read channel closed.
+	at io.nats.client.impl.NatsConnectionReader.run(NatsConnectionReader.java:186)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-02-02 19:11:13 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection disconnected: nats://localhost:32771
+2026-02-02 19:11:13 [pool-4-thread-1] ERROR com.chess.auth.config.NatsConfig [traceId=] - NATS exception occurred
+java.util.concurrent.ExecutionException: java.io.IOException: Failed to read initial info message.
+	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
+	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:205)
+	at io.nats.client.impl.NatsConnection.tryToConnect(NatsConnection.java:613)
+	at io.nats.client.impl.NatsConnection.reconnectImpl(NatsConnection.java:451)
+	at io.nats.client.impl.NatsConnection.closeSocket(NatsConnection.java:827)
+	at io.nats.client.impl.NatsConnection.lambda$handleCommunicationIssue$10(NatsConnection.java:775)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Failed to read initial info message.
+	at io.nats.client.impl.NatsConnection.readInitialInfo(NatsConnection.java:1790)
+	at io.nats.client.impl.NatsConnection.lambda$tryToConnect$7(NatsConnection.java:592)
+	... 4 common frames omitted
+2026-02-02 19:11:13 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection disconnected: nats://localhost:32771
+2026-02-02 19:11:13 [SpringApplicationShutdownHook] INFO  o.s.boot.tomcat.GracefulShutdown [traceId=] - Commencing graceful shutdown. Waiting for active requests to complete
+2026-02-02 19:11:13 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown [traceId=] - Graceful shutdown complete
+2026-02-02 19:11:13 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection closed: nats://localhost:32771
+2026-02-02 19:11:13 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [traceId=] - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-02-02 19:11:13 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Shutdown initiated...
+2026-02-02 19:11:13 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Shutdown completed.
+2026-02-02 19:40:58 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Starting AuthServiceApplicationTests using Java 21.0.9 with PID 61105 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:40:58 [main] DEBUG c.c.auth.AuthServiceApplicationTests [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:40:58 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - The following 1 profile is active: "test"
+2026-02-02 19:40:58 [main] INFO  c.c.auth.AuthServiceApplicationTests [traceId=] - Started AuthServiceApplicationTests in 0.329 seconds (process running for 1.998)
+2026-02-02 19:40:59 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 4a729829-12e0-4d5d-abb8-5fc8f67e69de
+2026-02-02 19:40:59 [main] WARN  c.c.a.messaging.AuthEventPublisher [traceId=] - NATS connection is not available. Event will not be published for userId: 4a729829-12e0-4d5d-abb8-5fc8f67e69de
+2026-02-02 19:40:59 [main] INFO  c.c.a.messaging.AuthEventPublisher [traceId=] - Published UserRegistered event for userId: 4a729829-12e0-4d5d-abb8-5fc8f67e69de
+2026-02-02 19:40:59 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/logout - userId: 38aaac10-628e-41bf-b238-9b03f1afdecd
+2026-02-02 19:40:59 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/login - email: user@example.com
+2026-02-02 19:40:59 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/register - email: user@example.com
+2026-02-02 19:40:59 [main] INFO  c.c.auth.controller.AuthController [traceId=] - POST /auth/refresh
+2026-02-02 19:41:02 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - Starting AuthServiceIT using Java 21.0.9 with PID 61196 (started by stepan in /home/stepan/IdeaProjects/project/chess/chess-auth-service)
+2026-02-02 19:41:02 [main] DEBUG com.chess.auth.it.AuthServiceIT [traceId=] - Running with Spring Boot v4.0.2, Spring v7.0.3
+2026-02-02 19:41:02 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - The following 1 profile is active: "it"
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Finished Spring Data repository scanning in 63 ms. Found 2 JPA repository interfaces.
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport [traceId=] - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.chess.auth.repo.RefreshTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport [traceId=] - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.chess.auth.repo.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-02-02 19:41:03 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate [traceId=] - Finished Spring Data repository scanning in 5 ms. Found 0 Redis repository interfaces.
+2026-02-02 19:41:03 [main] INFO  o.s.boot.tomcat.TomcatWebServer [traceId=] - Tomcat initialized with port 0 (http)
+2026-02-02 19:41:03 [main] INFO  o.a.catalina.core.StandardService [traceId=] - Starting service [Tomcat]
+2026-02-02 19:41:03 [main] INFO  o.a.catalina.core.StandardEngine [traceId=] - Starting Servlet engine: [Apache Tomcat/11.0.15]
+2026-02-02 19:41:03 [main] INFO  o.s.b.w.c.s.WebApplicationContextInitializer [traceId=] - Root WebApplicationContext: initialization completed in 1100 ms
+2026-02-02 19:41:03 [main] INFO  com.chess.auth.config.JwtConfig [traceId=] - JWT Token Provider initialized with access token validity: 60000ms, refresh token validity: 300000ms
+2026-02-02 19:41:04 [main] DEBUG c.c.a.s.JwtAuthenticationFilter [traceId=] - Filter 'jwtAuthenticationFilter' configured for use
+2026-02-02 19:41:04 [main] DEBUG c.c.auth.filter.RequestIdMdcFilter [traceId=] - Filter 'requestIdMdcFilter' configured for use
+2026-02-02 19:41:04 [main] DEBUG c.chess.auth.filter.RateLimitFilter [traceId=] - Filter 'rateLimitFilter' configured for use
+2026-02-02 19:41:04 [main] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Starting...
+2026-02-02 19:41:04 [main] INFO  com.zaxxer.hikari.pool.HikariPool [traceId=] - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@37e15055
+2026-02-02 19:41:04 [main] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Start completed.
+2026-02-02 19:41:04 [main] INFO  org.flywaydb.core.FlywayExecutor [traceId=] - Database: jdbc:postgresql://localhost:32811/auth_it?loggerLevel=OFF (PostgreSQL 16.11)
+2026-02-02 19:41:04 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory [traceId=] - Schema history table "public"."flyway_schema_history" does not exist yet
+2026-02-02 19:41:04 [main] INFO  o.f.core.internal.command.DbValidate [traceId=] - Successfully validated 2 migrations (execution time 00:00.008s)
+2026-02-02 19:41:04 [main] INFO  org.flywaydb.core.Flyway [traceId=] - All configured schemas are empty; baseline operation skipped. A baseline or migration script with a lower version than the baseline version may execute if available. Check the Schemas parameter if this is not intended.
+2026-02-02 19:41:04 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory [traceId=] - Creating Schema History table "public"."flyway_schema_history" ...
+2026-02-02 19:41:04 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Current version of schema "public": << Empty Schema >>
+2026-02-02 19:41:04 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Migrating schema "public" to version "1 - create auth users"
+2026-02-02 19:41:04 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Migrating schema "public" to version "2 - create refresh tokens"
+2026-02-02 19:41:04 [main] INFO  o.f.core.internal.command.DbMigrate [traceId=] - Successfully applied 2 migrations to schema "public", now at version v2 (execution time 00:00.011s)
+2026-02-02 19:41:04 [main] INFO  org.hibernate.orm.jpa [traceId=] - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-02-02 19:41:04 [main] INFO  org.hibernate.orm.core [traceId=] - HHH000001: Hibernate ORM core version 7.2.1.Final
+2026-02-02 19:41:04 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo [traceId=] - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-02 19:41:04 [main] WARN  org.hibernate.orm.deprecation [traceId=] - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-02 19:41:04 [main] INFO  o.hibernate.orm.connections.pooling [traceId=] - HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:32811/auth_it?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.11
+	Default catalog/schema: auth_it/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-02-02 19:41:05 [main] INFO  org.hibernate.orm.core [traceId=] - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-02 19:41:05 [main] INFO  org.hibernate.orm.jdbc.batch [traceId=] - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 20)
+2026-02-02 19:41:05 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [traceId=] - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-02 19:41:05 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories [traceId=] - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-02-02 19:41:05 [main] INFO  com.chess.auth.config.NatsConfig [traceId=] - Connected to NATS server: nats://localhost:32813
+2026-02-02 19:41:05 [pool-4-thread-1] INFO  com.chess.auth.config.NatsConfig [traceId=] - NATS connection established: nats://localhost:32813
+2026-02-02 19:41:05 [main] INFO  com.chess.auth.config.NatsConfig [traceId=] - Created JetStream stream: AUTH_EVENTS subjects=domain.auth.UserRegistered
+2026-02-02 19:41:05 [main] DEBUG o.s.s.c.a.a.c.AuthenticationConfiguration$DefaultPasswordEncoderAuthenticationManagerBuilder [traceId=] - No authenticationProviders and no parentAuthenticationManager defined. Returning null.
+2026-02-02 19:41:05 [main] DEBUG o.s.s.web.DefaultSecurityFilterChain [traceId=] - Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, LogoutFilter, RateLimitFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-02-02 19:41:06 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver [traceId=] - Exposing 4 endpoints beneath base path '/actuator'
+2026-02-02 19:41:06 [main] INFO  o.s.boot.tomcat.TomcatWebServer [traceId=] - Tomcat started on port 35647 (http) with context path '/'
+2026-02-02 19:41:06 [main] INFO  com.chess.auth.it.AuthServiceIT [traceId=] - Started AuthServiceIT in 3.795 seconds (process running for 6.714)
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] [traceId=] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet [traceId=] - Initializing Servlet 'dispatcherServlet'
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet [traceId=] - Completed initialization in 1 ms
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG o.s.security.web.FilterChainProxy [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - Securing POST /auth/register
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG o.s.s.w.a.AnonymousAuthenticationFilter [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - Set SecurityContextHolder to anonymous SecurityContext
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG o.s.security.web.FilterChainProxy [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - Secured POST /auth/register
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  c.c.auth.controller.AuthController [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - POST /auth/register - email: it-user@mail.com
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  com.chess.auth.service.AuthService [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - Registering user with email: it-user@mail.com
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - 
+    select
+        u1_0.id 
+    from
+        auth_users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  com.chess.auth.service.AuthService [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - User registered successfully: userId=9d2b6551-a4fa-4c5e-928a-cfd005fff07a, email=it-user@mail.com
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] INFO  c.c.a.messaging.AuthEventPublisher [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - Published UserRegistered event for userId: 9d2b6551-a4fa-4c5e-928a-cfd005fff07a
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - 
+    insert 
+    into
+        auth_users
+        (created_at, email, password_hash, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-02 19:41:06 [http-nio-auto-1-exec-1] DEBUG org.hibernate.SQL [traceId=483c8db8-d10a-4cf7-827b-298b917162bf] - 
+    insert 
+    into
+        user_roles
+        (user_id, role) 
+    values
+        (?, ?)
+2026-02-02 19:41:07 [main] WARN  o.j.j.e.d.AbstractExtensionContext [traceId=] - Type implements CloseableResource but not AutoCloseable: org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter
+2026-02-02 19:41:07 [pool-4-thread-1] ERROR com.chess.auth.config.NatsConfig [traceId=] - NATS exception occurred
+java.io.IOException: Read channel closed.
+	at io.nats.client.impl.NatsConnectionReader.run(NatsConnectionReader.java:186)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-02-02 19:41:07 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection disconnected: nats://localhost:32813
+2026-02-02 19:41:07 [pool-4-thread-1] ERROR com.chess.auth.config.NatsConfig [traceId=] - NATS exception occurred
+java.util.concurrent.ExecutionException: java.io.IOException: Failed to read initial info message.
+	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
+	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:205)
+	at io.nats.client.impl.NatsConnection.tryToConnect(NatsConnection.java:613)
+	at io.nats.client.impl.NatsConnection.reconnectImpl(NatsConnection.java:451)
+	at io.nats.client.impl.NatsConnection.closeSocket(NatsConnection.java:827)
+	at io.nats.client.impl.NatsConnection.lambda$handleCommunicationIssue$10(NatsConnection.java:775)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Failed to read initial info message.
+	at io.nats.client.impl.NatsConnection.readInitialInfo(NatsConnection.java:1790)
+	at io.nats.client.impl.NatsConnection.lambda$tryToConnect$7(NatsConnection.java:592)
+	... 4 common frames omitted
+2026-02-02 19:41:07 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection disconnected: nats://localhost:32813
+2026-02-02 19:41:07 [SpringApplicationShutdownHook] INFO  o.s.boot.tomcat.GracefulShutdown [traceId=] - Commencing graceful shutdown. Waiting for active requests to complete
+2026-02-02 19:41:07 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown [traceId=] - Graceful shutdown complete
+2026-02-02 19:41:07 [pool-4-thread-1] WARN  com.chess.auth.config.NatsConfig [traceId=] - NATS connection closed: nats://localhost:32813
+2026-02-02 19:41:07 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean [traceId=] - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-02-02 19:41:07 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Shutdown initiated...
+2026-02-02 19:41:07 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource [traceId=] - HikariPool-1 - Shutdown completed.

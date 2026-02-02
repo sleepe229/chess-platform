@@ -64,38 +64,69 @@ public class GameEventsListener {
     private JetStreamSubscription subTimeExpired;
 
     private static final String CONSUMER = "ws-service-domain-game";
+    private static final String DURABLE_STARTED = "ws-service-game-started";
+    private static final String DURABLE_MOVE = "ws-service-game-move";
+    private static final String DURABLE_FINISHED = "ws-service-game-finished";
+    private static final String DURABLE_TIME_EXPIRED = "ws-service-game-time-expired";
 
     @PostConstruct
     public void init() {
         try {
             dispatcher = natsConnection.createDispatcher();
 
-            ConsumerConfiguration config = ConsumerConfiguration.builder()
-                    .durable(CONSUMER)
-                    .ackPolicy(AckPolicy.Explicit)
-                    .ackWait(Duration.ofSeconds(30))
-                    .maxDeliver(5)
-                    .backoff(
-                            Duration.ofSeconds(1),
-                            Duration.ofSeconds(5),
-                            Duration.ofSeconds(15),
-                            Duration.ofSeconds(30),
-                            Duration.ofSeconds(60)
-                    )
-                    .deliverPolicy(DeliverPolicy.All)
-                    .replayPolicy(ReplayPolicy.Instant)
-                    .build();
-            PushSubscribeOptions opts = PushSubscribeOptions.builder().configuration(config).build();
-
-            subStarted = jetStream.subscribe(NatsSubjects.GAME_STARTED, dispatcher, this::onStarted, false, opts);
-            subMove = jetStream.subscribe(NatsSubjects.GAME_MOVE_MADE, dispatcher, this::onMove, false, opts);
-            subFinished = jetStream.subscribe(NatsSubjects.GAME_FINISHED, dispatcher, this::onFinished, false, opts);
-            subTimeExpired = jetStream.subscribe(NatsSubjects.GAME_TIME_EXPIRED, dispatcher, this::onTimeExpired, false, opts);
+            // IMPORTANT: each subject must have its own durable consumer.
+            // JetStream disallows reusing the same durable name with different filter subjects.
+            subStarted = jetStream.subscribe(
+                    NatsSubjects.GAME_STARTED,
+                    dispatcher,
+                    this::onStarted,
+                    false,
+                    PushSubscribeOptions.builder().configuration(baseConsumerConfig(DURABLE_STARTED)).build()
+            );
+            subMove = jetStream.subscribe(
+                    NatsSubjects.GAME_MOVE_MADE,
+                    dispatcher,
+                    this::onMove,
+                    false,
+                    PushSubscribeOptions.builder().configuration(baseConsumerConfig(DURABLE_MOVE)).build()
+            );
+            subFinished = jetStream.subscribe(
+                    NatsSubjects.GAME_FINISHED,
+                    dispatcher,
+                    this::onFinished,
+                    false,
+                    PushSubscribeOptions.builder().configuration(baseConsumerConfig(DURABLE_FINISHED)).build()
+            );
+            subTimeExpired = jetStream.subscribe(
+                    NatsSubjects.GAME_TIME_EXPIRED,
+                    dispatcher,
+                    this::onTimeExpired,
+                    false,
+                    PushSubscribeOptions.builder().configuration(baseConsumerConfig(DURABLE_TIME_EXPIRED)).build()
+            );
 
             log.info("JetStream subscribed to game events: {}, {}, {}", NatsSubjects.GAME_STARTED, NatsSubjects.GAME_MOVE_MADE, NatsSubjects.GAME_FINISHED);
         } catch (Exception e) {
             log.error("Failed to initialize JetStream subscriptions", e);
         }
+    }
+
+    private ConsumerConfiguration baseConsumerConfig(String durable) {
+        return ConsumerConfiguration.builder()
+                .durable(durable)
+                .ackPolicy(AckPolicy.Explicit)
+                .ackWait(Duration.ofSeconds(30))
+                .maxDeliver(5)
+                .backoff(
+                        Duration.ofSeconds(1),
+                        Duration.ofSeconds(5),
+                        Duration.ofSeconds(15),
+                        Duration.ofSeconds(30),
+                        Duration.ofSeconds(60)
+                )
+                .deliverPolicy(DeliverPolicy.All)
+                .replayPolicy(ReplayPolicy.Instant)
+                .build();
     }
 
     @PreDestroy

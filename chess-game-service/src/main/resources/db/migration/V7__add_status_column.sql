@@ -1,0 +1,5 @@
+ALTER TABLE games
+    ADD COLUMN IF NOT EXISTS status VARCHAR(16) NOT NULL DEFAULT 'CREATED';
+
+CREATE INDEX IF NOT EXISTS idx_games_status ON games(status);
+

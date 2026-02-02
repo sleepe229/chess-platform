@@ -14,6 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -83,7 +86,11 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
 
             log.debug("Authenticated user: {} with roles: {}", userId, roles);
 
-            return chain.filter(exchange.mutate().request(mutatedRequest).build());
+            var authorities = roles.stream().map(SimpleGrantedAuthority::new).toList();
+            var authentication = new UsernamePasswordAuthenticationToken(userId.toString(), jwt, authorities);
+
+            return chain.filter(exchange.mutate().request(mutatedRequest).build())
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
 
         } catch (Exception ex) {
             log.error("Error processing JWT", ex);
