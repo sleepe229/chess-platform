@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -40,98 +41,112 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         UUID gameId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_GAME_ID);
+        UUID userId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_USER_ID);
+        if (userId != null && !limiter.tryAcquire(userId)) {
+            session.close(new CloseStatus(429, "Too many connections"));
+            return;
+        }
+        session.getAttributes().put("conn_acquired", true);
+
         registry.add(gameId, session);
 
         // init dedupe marker for broadcasts
         session.getAttributes().put("last_sent_ply", 0);
 
-        sendGameState(session, gameId);
+        withMdc(session, () -> {
+            sendGameState(session, gameId);
+            return null;
+        });
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        if (!rateLimitOk(session)) {
-            session.close(CloseStatus.POLICY_VIOLATION);
-            return;
-        }
+        withMdc(session, () -> {
+            if (!rateLimitOk(session)) {
+                session.close(CloseStatus.POLICY_VIOLATION);
+                return null;
+            }
 
-        UUID gameId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_GAME_ID);
-        UUID userId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_USER_ID);
-        String token = (String) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_TOKEN);
+            UUID gameId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_GAME_ID);
+            UUID userId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_USER_ID);
+            String token = (String) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_TOKEN);
 
-        JsonNode root = objectMapper.readTree(message.getPayload());
-        String type = root.hasNonNull("type") ? root.get("type").asText() : "";
+            JsonNode root = objectMapper.readTree(message.getPayload());
+            String type = root.hasNonNull("type") ? root.get("type").asText() : "";
 
-        switch (type) {
-            case "SYNC" -> {
-                sendGameState(session, gameId, root.hasNonNull("lastSeenPly") ? root.get("lastSeenPly").asInt(0) : null);
-            }
-            case "MOVE" -> {
-                String uci = root.hasNonNull("uci") ? root.get("uci").asText() : null;
-                String clientMoveId = root.hasNonNull("clientMoveId") ? root.get("clientMoveId").asText() : null;
-                if (uci == null || uci.isBlank()) {
-                    send(session, WsMoveRejectedMessage.builder()
-                            .gameId(gameId)
-                            .clientMoveId(clientMoveId)
-                            .reason("MISSING_UCI")
-                            .build());
-                    return;
+            switch (type) {
+                case "SYNC" -> {
+                    sendGameState(session, gameId, root.hasNonNull("lastSeenPly") ? root.get("lastSeenPly").asInt(0) : null);
                 }
+                case "MOVE" -> {
+                    String uci = root.hasNonNull("uci") ? root.get("uci").asText() : null;
+                    String clientMoveId = root.hasNonNull("clientMoveId") ? root.get("clientMoveId").asText() : null;
+                    if (uci == null || uci.isBlank()) {
+                        send(session, WsMoveRejectedMessage.builder()
+                                .gameId(gameId)
+                                .clientMoveId(clientMoveId)
+                                .reason("MISSING_UCI")
+                                .build());
+                        return null;
+                    }
 
-                try {
-                    GameStateMessage state = gameServiceClient.move(gameId, token, new MoveCommand(uci, clientMoveId));
-                    int ply = state.getMoves() != null ? state.getMoves().size() : 0;
-                    session.getAttributes().put("last_sent_ply", ply);
-                    send(session, WsMoveAcceptedMessage.builder()
-                            .gameId(gameId)
-                            .clientMoveId(clientMoveId)
-                            .ply(ply)
-                            .fen(state.getFen())
-                            .clocks(state.getClocks())
-                            .build());
-                } catch (Exception e) {
-                    String code = gameServiceClient.extractErrorCode(e);
-                    send(session, WsMoveRejectedMessage.builder()
-                            .gameId(gameId)
-                            .clientMoveId(clientMoveId)
-                            .reason(code)
-                            .build());
+                    try {
+                        GameStateMessage state = gameServiceClient.move(gameId, token, new MoveCommand(uci, clientMoveId));
+                        int ply = state.getMoves() != null ? state.getMoves().size() : 0;
+                        session.getAttributes().put("last_sent_ply", ply);
+                        send(session, WsMoveAcceptedMessage.builder()
+                                .gameId(gameId)
+                                .clientMoveId(clientMoveId)
+                                .ply(ply)
+                                .fen(state.getFen())
+                                .clocks(state.getClocks())
+                                .build());
+                    } catch (Exception e) {
+                        String code = gameServiceClient.extractErrorCode(e);
+                        send(session, WsMoveRejectedMessage.builder()
+                                .gameId(gameId)
+                                .clientMoveId(clientMoveId)
+                                .reason(code)
+                                .build());
+                    }
+                }
+                case "RESIGN" -> {
+                    try {
+                        gameServiceClient.resign(gameId, token);
+                        send(session, Map.of("type", "RESIGN_ACCEPTED", "gameId", gameId, "userId", userId));
+                    } catch (Exception e) {
+                        send(session, Map.of("type", "RESIGN_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
+                    }
+                }
+                case "OFFER_DRAW" -> {
+                    try {
+                        gameServiceClient.offerDraw(gameId, token);
+                        send(session, Map.of("type", "DRAW_OFFERED", "gameId", gameId, "userId", userId));
+                    } catch (Exception e) {
+                        send(session, Map.of("type", "DRAW_OFFER_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
+                    }
+                }
+                case "ACCEPT_DRAW" -> {
+                    try {
+                        gameServiceClient.acceptDraw(gameId, token);
+                        send(session, Map.of("type", "DRAW_ACCEPTED", "gameId", gameId, "userId", userId));
+                    } catch (Exception e) {
+                        send(session, Map.of("type", "DRAW_ACCEPT_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
+                    }
+                }
+                default -> {
+                    send(session, Map.of("type", "ERROR", "message", "Unknown message type"));
                 }
             }
-            case "RESIGN" -> {
-                try {
-                    gameServiceClient.resign(gameId, token);
-                    send(session, Map.of("type", "RESIGN_ACCEPTED", "gameId", gameId, "userId", userId));
-                } catch (Exception e) {
-                    send(session, Map.of("type", "RESIGN_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
-                }
-            }
-            case "OFFER_DRAW" -> {
-                try {
-                    gameServiceClient.offerDraw(gameId, token);
-                    send(session, Map.of("type", "DRAW_OFFERED", "gameId", gameId, "userId", userId));
-                } catch (Exception e) {
-                    send(session, Map.of("type", "DRAW_OFFER_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
-                }
-            }
-            case "ACCEPT_DRAW" -> {
-                try {
-                    gameServiceClient.acceptDraw(gameId, token);
-                    send(session, Map.of("type", "DRAW_ACCEPTED", "gameId", gameId, "userId", userId));
-                } catch (Exception e) {
-                    send(session, Map.of("type", "DRAW_ACCEPT_REJECTED", "gameId", gameId, "reason", gameServiceClient.extractErrorCode(e)));
-                }
-            }
-            default -> {
-                send(session, Map.of("type", "ERROR", "message", "Unknown message type"));
-            }
-        }
+            return null;
+        });
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         UUID userId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_USER_ID);
-        if (userId != null) {
+        Object acquired = session.getAttributes().get("conn_acquired");
+        if (userId != null && Boolean.TRUE.equals(acquired)) {
             limiter.release(userId);
         }
         UUID gameId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_GAME_ID);
@@ -189,6 +204,20 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         int next = (count != null ? count : 0) + 1;
         session.getAttributes().put("rl_count", next);
         return next <= maxMessagesPerSecond;
+    }
+
+    private <T> T withMdc(WebSocketSession session, ThrowingSupplier<T> fn) throws Exception {
+        String traceId = (String) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_TRACE_ID);
+        UUID userId = (UUID) session.getAttributes().get(JwtHandshakeInterceptor.ATTR_USER_ID);
+        try (var c1 = MDC.putCloseable("traceId", traceId != null ? traceId : UUID.randomUUID().toString());
+             var c2 = MDC.putCloseable("userId", userId != null ? userId.toString() : null)) {
+            return fn.get();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
     }
 }
 

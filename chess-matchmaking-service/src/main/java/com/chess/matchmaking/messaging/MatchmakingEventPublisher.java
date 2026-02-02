@@ -64,9 +64,9 @@ public class MatchmakingEventPublisher {
             }
 
             if (jetStream != null) {
-                jetStream.publish(NatsSubjects.MATCHMAKING_MATCH_FOUND, headers, eventJson.getBytes());
+                jetStream.publish(NatsSubjects.MATCHMAKING_MATCH_FOUND, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             } else {
-                natsConnection.publish(NatsSubjects.MATCHMAKING_MATCH_FOUND, headers, eventJson.getBytes());
+                natsConnection.publish(NatsSubjects.MATCHMAKING_MATCH_FOUND, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             }
 
             log.info("Published MatchFound event: matchId={}, white={}, black={}, timeControl={}",
@@ -147,9 +147,9 @@ public class MatchmakingEventPublisher {
         }
 
         if (jetStream != null) {
-            jetStream.publish(subject, headers, eventJson.getBytes());
+            jetStream.publish(subject, headers, eventJson.getBytes(StandardCharsets.UTF_8));
         } else {
-            natsConnection.publish(subject, headers, eventJson.getBytes());
+            natsConnection.publish(subject, headers, eventJson.getBytes(StandardCharsets.UTF_8));
         }
     }
 

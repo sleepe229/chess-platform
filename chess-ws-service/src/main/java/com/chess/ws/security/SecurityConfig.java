@@ -21,9 +21,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
-                        // WebSocket handshake is handled by interceptor; allow it through the filter chain
                         .requestMatchers("/ws/**", "/v1/ws/**").permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().denyAll()
                 );
         return http.build();
     }

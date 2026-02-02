@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Slf4j
@@ -65,9 +66,9 @@ public class UserEventPublisher {
             }
 
             if (jetStream != null) {
-                jetStream.publish(NatsSubjects.USER_RATING_UPDATED, headers, eventJson.getBytes());
+                jetStream.publish(NatsSubjects.USER_RATING_UPDATED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             } else {
-                natsConnection.publish(NatsSubjects.USER_RATING_UPDATED, headers, eventJson.getBytes());
+                natsConnection.publish(NatsSubjects.USER_RATING_UPDATED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             }
 
             log.info("Published RatingUpdated event: userId={}, timeControl={}, newRating={}",

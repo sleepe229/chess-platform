@@ -25,9 +25,9 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     public static final String ATTR_GAME_ID = "gameId";
     public static final String ATTR_USER_ID = "userId";
     public static final String ATTR_TOKEN = "token";
+    public static final String ATTR_TRACE_ID = "traceId";
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserConnectionLimiter limiter;
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) {
@@ -39,18 +39,18 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                 return false;
             }
 
+            String traceId = request.getHeaders().getFirst("X-Request-Id");
+            if (!StringUtils.hasText(traceId)) {
+                traceId = UUID.randomUUID().toString();
+            }
+            attributes.put(ATTR_TRACE_ID, traceId);
+
             UUID userId = jwtTokenProvider.getUserIdFromToken(token);
             attributes.put(ATTR_USER_ID, userId);
             attributes.put(ATTR_TOKEN, token);
 
             UUID gameId = extractGameIdFromPath(request.getURI().getPath());
             attributes.put(ATTR_GAME_ID, gameId);
-
-            if (!limiter.tryAcquire(userId)) {
-                response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                return false;
-            }
-            attributes.put("conn_acquired", true);
 
             return true;
         } catch (Exception e) {

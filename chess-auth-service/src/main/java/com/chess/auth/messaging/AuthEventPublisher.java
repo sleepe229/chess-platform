@@ -15,6 +15,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Slf4j
@@ -59,9 +60,9 @@ public class AuthEventPublisher {
             }
 
             if (jetStream != null) {
-                jetStream.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes());
+                jetStream.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             } else {
-                natsConnection.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes());
+                natsConnection.publish(NatsSubjects.AUTH_USER_REGISTERED, headers, eventJson.getBytes(StandardCharsets.UTF_8));
             }
 
             log.info("Published UserRegistered event for userId: {}", userId);
