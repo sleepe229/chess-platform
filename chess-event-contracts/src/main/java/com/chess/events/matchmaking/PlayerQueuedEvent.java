@@ -1,20 +1,17 @@
 package com.chess.events.matchmaking;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class PlayerQueuedEvent extends DomainEvent {
+public class PlayerQueuedEvent {
 
     @NotBlank
     private String requestId;
@@ -33,15 +30,4 @@ public class PlayerQueuedEvent extends DomainEvent {
 
     @NotNull
     private Boolean rated;
-
-    @NotNull
-    private Double rating;
-    
-    @NotNull
-    private Double ratingDeviation;
-
-    @Override
-    public String getAggregateId() {
-        return userId;
-    }
 }

@@ -1,25 +1,31 @@
 package com.chess.events.util;
 
-import com.chess.events.common.DomainEvent;
-import com.chess.events.common.EventMetadata;
+import com.chess.events.common.EventEnvelope;
+import org.slf4j.MDC;
 
 import java.time.Instant;
 import java.util.UUID;
 
 public class EventBuilder {
 
-    public static <T extends DomainEvent> T enrichEvent(T event, String producer) {
-        event.setEventId(UUID.randomUUID().toString());
-        event.setEventVersion(1);
-        event.setProducer(producer);
-        event.setOccurredAt(Instant.now().toString());
+    public static <T> EventEnvelope<T> envelope(String eventType, String producer, T payload) {
+        return envelope(null, eventType, producer, payload);
+    }
 
-        if (event.getMetadata() == null) {
-            event.setMetadata(EventMetadata.builder()
-                    .correlationId(UUID.randomUUID().toString())
-                    .build());
+    public static <T> EventEnvelope<T> envelope(String eventId, String eventType, String producer, T payload) {
+        String correlationId = MDC.get("traceId");
+        if (correlationId == null || correlationId.isBlank()) {
+            correlationId = UUID.randomUUID().toString();
         }
 
-        return event;
+        return EventEnvelope.<T>builder()
+                .eventId(eventId != null && !eventId.isBlank() ? eventId : UUID.randomUUID().toString())
+                .eventType(eventType)
+                .eventVersion(1)
+                .producer(producer)
+                .occurredAt(Instant.now().toString())
+                .correlationId(correlationId)
+                .payload(payload)
+                .build();
     }
 }

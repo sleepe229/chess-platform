@@ -1,6 +1,7 @@
 package com.chess.matchmaking.service;
 
 import com.chess.matchmaking.config.MatchmakingProperties;
+import com.chess.matchmaking.messaging.MatchmakingEventPublisher;
 import com.chess.matchmaking.repo.MatchmakingAuditRepository;
 import com.chess.matchmaking.repo.MatchmakingRequestStore;
 import com.chess.matchmaking.repo.RedisMatchmakingEngine;
@@ -30,6 +31,8 @@ class MatchmakingExpiryJobTest {
     @Mock
     private MatchmakingRequestStore requestStore;
     @Mock
+    private MatchmakingEventPublisher eventPublisher;
+    @Mock
     private ObjectProvider<MatchmakingAuditRepository> auditRepositoryProvider;
     @Mock
     private MatchmakingAuditRepository auditRepository;
@@ -41,7 +44,7 @@ class MatchmakingExpiryJobTest {
     void setUp() {
         properties = new MatchmakingProperties();
         properties.setQueueTimeoutSeconds(120);
-        job = new MatchmakingExpiryJob(matchmakingEngine, requestStore, properties, auditRepositoryProvider);
+        job = new MatchmakingExpiryJob(matchmakingEngine, requestStore, properties, eventPublisher, auditRepositoryProvider);
     }
 
     @Test
@@ -65,6 +68,7 @@ class MatchmakingExpiryJobTest {
 
         verify(matchmakingEngine).removeFromQueues(eq("BULLET"), eq(requestId));
         verify(requestStore).markExpired(eq(requestId));
+        verify(eventPublisher).publishPlayerDequeued(eq(requestId), eq(userId), eq("EXPIRED"));
         verify(auditRepository).markExpired(eq(UUID.fromString(requestId)));
     }
 

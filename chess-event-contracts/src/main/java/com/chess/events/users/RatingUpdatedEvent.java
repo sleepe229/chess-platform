@@ -1,20 +1,17 @@
-package com.chess.events.user;
+package com.chess.events.users;
 
-import com.chess.events.common.DomainEvent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class RatingUpdatedEvent extends DomainEvent {
+public class RatingUpdatedEvent {
 
     @NotBlank
     private String userId;
@@ -35,9 +32,4 @@ public class RatingUpdatedEvent extends DomainEvent {
     private Double newRd;
 
     private String gameId;
-
-    @Override
-    public String getAggregateId() {
-        return userId;
-    }
 }

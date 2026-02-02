@@ -1,8 +1,10 @@
 package com.chess.gateway.filter;
 
+import com.chess.common.dto.ErrorResponse;
 import com.chess.common.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -14,17 +16,16 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationGatewayFilter implements WebFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final ObjectMapper objectMapper;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/auth/register",
@@ -35,6 +36,14 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
             "/v1/auth/refresh",
             "/actuator"
     );
+
+    public JwtAuthenticationGatewayFilter(
+            JwtTokenProvider tokenProvider,
+            @Autowired(required = false) ObjectMapper objectMapper
+    ) {
+        this.tokenProvider = tokenProvider;
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -98,15 +107,26 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
 
     private Mono<Void> replyUnauthorized(ServerWebExchange exchange, String message) {
         String traceId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
-        String body = String.format(
-                "{\"error\":\"UNAUTHORIZED\",\"message\":\"%s\",\"traceId\":%s}",
-                message.replace("\"", "\\\""),
-                traceId != null ? "\"" + traceId + "\"" : "null"
-        );
+        ErrorResponse error = ErrorResponse.builder()
+                .error("UNAUTHORIZED")
+                .message(message)
+                .traceId(traceId)
+                .details(Collections.emptyMap())
+                .build();
+
+        byte[] bodyBytes;
+        try {
+            bodyBytes = objectMapper.writeValueAsBytes(error);
+        } catch (Exception e) {
+            // safe fallback (still include required fields)
+            String fallback = "{\"error\":\"UNAUTHORIZED\",\"message\":\"Unauthorized\",\"traceId\":\"" +
+                    (traceId != null ? traceId : "") + "\",\"details\":{}}";
+            bodyBytes = fallback.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
         return exchange.getResponse().writeWith(
-                Mono.just(exchange.getResponse().bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8)))
+                Mono.just(exchange.getResponse().bufferFactory().wrap(bodyBytes))
         );
     }
 }

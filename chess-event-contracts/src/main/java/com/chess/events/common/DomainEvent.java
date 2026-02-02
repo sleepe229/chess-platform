@@ -3,7 +3,7 @@ package com.chess.events.common;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.chess.events.auth.UserRegisteredEvent;
-import com.chess.events.user.RatingUpdatedEvent;
+import com.chess.events.users.RatingUpdatedEvent;
 import com.chess.events.matchmaking.MatchFoundEvent;
 import com.chess.events.matchmaking.PlayerDequeuedEvent;
 import com.chess.events.matchmaking.PlayerQueuedEvent;
