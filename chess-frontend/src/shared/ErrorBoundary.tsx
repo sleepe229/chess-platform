@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <button
               type="button"
               className="mt-4 text-sm text-sky-400 hover:underline"
-              onClick={() => this.setState({ hasError: false, error: null })}
+              onClick={() => window.location.reload()}
             >
               Try again
             </button>

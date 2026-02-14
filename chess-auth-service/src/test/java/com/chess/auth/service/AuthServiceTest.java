@@ -1,5 +1,6 @@
 package com.chess.auth.service;
 
+import com.chess.auth.client.UserServiceClient;
 import com.chess.auth.constants.Role;
 import com.chess.auth.domain.RefreshToken;
 import com.chess.auth.domain.User;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +61,9 @@ class AuthServiceTest {
     @Mock
     private AuthEventPublisher eventPublisher;
 
+    @Mock
+    private UserServiceClient userServiceClient;
+
     private AuthService authService;
 
     @BeforeEach
@@ -70,6 +75,7 @@ class AuthServiceTest {
                 jwtTokenProvider,
                 refreshTokenService,
                 eventPublisher);
+        ReflectionTestUtils.setField(authService, "userServiceClient", userServiceClient);
     }
 
     @Nested
@@ -96,6 +102,7 @@ class AuthServiceTest {
 
             assertThat(response.getUserId()).isEqualTo(USER_ID);
             verify(userRepository).save(any(User.class));
+            verify(userServiceClient).createUserIfAbsent(USER_ID, EMAIL);
             verify(eventPublisher).publishUserRegistered(USER_ID, EMAIL);
         }
 

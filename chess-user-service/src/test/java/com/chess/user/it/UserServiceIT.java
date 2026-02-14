@@ -31,6 +31,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,6 +78,50 @@ class UserServiceIT {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Test
+    void internalCreateUser_createsProfileThenGetReturnsUser() throws Exception {
+        UUID userId = UUID.randomUUID();
+        String email = "internal@mail.com";
+        RestClient rc = RestClient.builder().baseUrl("http://localhost:" + port).build();
+
+        var createResponse = rc.post()
+                .uri("/internal/users")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(Map.of("userId", userId.toString(), "email", email))
+                .retrieve()
+                .toEntity(String.class);
+
+        assertThat(createResponse.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(createResponse.getBody()).contains(userId.toString());
+
+        String body = rc.get().uri("/users/{id}", userId).retrieve().body(String.class);
+        JsonNode node = objectMapper.readTree(body);
+        assertThat(node.get("userId").asText()).isEqualTo(userId.toString());
+        assertThat(node.get("username").asText()).isNotBlank();
+    }
+
+    @Test
+    void internalCreateUser_duplicateReturns409() {
+        UUID userId = UUID.randomUUID();
+        String email = "dup@mail.com";
+        RestClient rc = RestClient.builder().baseUrl("http://localhost:" + port).build();
+
+        rc.post()
+                .uri("/internal/users")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(Map.of("userId", userId.toString(), "email", email))
+                .retrieve();
+
+        var second = rc.post()
+                .uri("/internal/users")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(Map.of("userId", userId.toString(), "email", email))
+                .retrieve()
+                .toEntity(String.class);
+
+        assertThat(second.getStatusCode().value()).isEqualTo(409);
+    }
 
     @Test
     void consumesUserRegistered_andCreatesProfileAndRatings() throws Exception {

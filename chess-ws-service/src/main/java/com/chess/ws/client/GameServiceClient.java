@@ -48,11 +48,7 @@ public class GameServiceClient {
     }
 
     private RestClient client() {
-        if (restClient != null) return restClient;
-        SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-        f.setConnectTimeout(java.time.Duration.ofMillis(connectTimeoutMs));
-        f.setReadTimeout(java.time.Duration.ofMillis(readTimeoutMs));
-        return RestClient.builder().baseUrl(baseUrl).requestFactory(f).build();
+        return restClient;
     }
 
     public GameStateMessage getState(UUID gameId, String token) {

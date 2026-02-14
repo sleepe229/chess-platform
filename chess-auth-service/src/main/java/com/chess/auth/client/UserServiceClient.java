@@ -46,7 +46,7 @@ public class UserServiceClient {
             log.debug("Created user profile in user-service: {}", userId);
         } catch (RestClientResponseException e) {
             if (e.getStatusCode().value() == 409) {
-                log.debug("User already exists in user-service: {}", userId);
+                log.debug("User already exists in user-service: {}, response={}", userId, e.getResponseBodyAsString());
                 return;
             }
             log.warn("Failed to create user profile in user-service for userId={}: {} {}", userId, e.getStatusCode(), e.getMessage());
