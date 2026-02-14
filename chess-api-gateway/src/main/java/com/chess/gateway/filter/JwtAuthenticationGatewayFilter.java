@@ -37,6 +37,7 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
             "/v1/auth/register",
             "/v1/auth/login",
             "/v1/auth/refresh",
+            "/ws/",
             "/actuator"
     );
 

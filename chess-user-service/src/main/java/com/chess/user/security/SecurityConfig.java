@@ -26,6 +26,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/internal/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/{userId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/{userId}/ratings").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/{userId}/rating-history/**").permitAll()

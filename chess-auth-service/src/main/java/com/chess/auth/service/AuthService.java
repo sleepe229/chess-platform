@@ -1,5 +1,6 @@
 package com.chess.auth.service;
 
+import com.chess.auth.client.UserServiceClient;
 import com.chess.auth.constants.Role;
 import com.chess.auth.domain.RefreshToken;
 import com.chess.auth.domain.User;
@@ -13,6 +14,7 @@ import com.chess.common.exception.UnauthorizedException;
 import com.chess.common.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final AuthEventPublisher eventPublisher;
+    @Autowired(required = false)
+    private UserServiceClient userServiceClient;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -50,12 +54,19 @@ public class AuthService {
         user = userRepository.save(user);
         log.info("User registered successfully: userId={}, email={}", user.getId(), user.getEmail());
 
-        // Публикуем событие
+        // Sync create profile in user-service so GET /users/me works immediately after login
+        if (userServiceClient != null) {
+            try {
+                userServiceClient.createUserIfAbsent(user.getId(), user.getEmail());
+            } catch (Exception e) {
+                log.warn("Failed to create user profile in user-service for userId={}, event will retry", user.getId(), e);
+            }
+        }
+
         try {
             eventPublisher.publishUserRegistered(user.getId(), user.getEmail());
         } catch (Exception e) {
             log.error("Failed to publish UserRegistered event for userId: {}", user.getId(), e);
-            // Don't fail registration if event publishing fails
         }
 
         return RegisterResponse.builder()
