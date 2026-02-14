@@ -6,8 +6,12 @@ import { useAuthStore } from '../../shared/auth/authStore'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { GameWsClient, type WsServerMessage, type WsStatus } from '../../shared/ws/GameWsClient'
+
+type MsgMoveAccepted = WsServerMessage & { type: 'MOVE_ACCEPTED'; fen: string; clocks?: { whiteMs: number; blackMs: number } }
+type MsgGameFinished = WsServerMessage & { type: 'GAME_FINISHED'; result: string; reason: string }
 import { acceptDraw, getGameState, offerDraw, resign, type GameState } from './gameApi'
 import { getErrorMessage } from '../../shared/utils/getErrorMessage'
+import { STARTING_FEN } from './gameApi'
 
 type Color = 'white' | 'black'
 
@@ -105,20 +109,20 @@ export function GamePage() {
 
     if (msg.type === 'GAME_STATE') {
       setError(null)
-      // server sends full moves
+      const gs = msg as Extract<WsServerMessage, { type: 'GAME_STATE' }>
       const st: GameState = {
-        gameId: String(msg.gameId),
-        whiteId: String(msg.whiteId),
-        blackId: String(msg.blackId),
-        fen: msg.fen,
-        moves: (msg.moves ?? []).map((m: { ply: number; uci: string; san?: string | null }) => ({
+        gameId: String(gs.gameId),
+        whiteId: String(gs.whiteId),
+        blackId: String(gs.blackId),
+        fen: gs.fen,
+        moves: (gs.moves ?? []).map((m) => ({
           ply: m.ply,
           uci: m.uci,
           san: m.san ?? null,
         })),
-        clocks: msg.clocks ? { whiteMs: msg.clocks.whiteMs, blackMs: msg.clocks.blackMs } : null,
-        status: msg.status ?? null,
-        sideToMove: msg.sideToMove ?? null,
+        clocks: gs.clocks ? { whiteMs: gs.clocks.whiteMs, blackMs: gs.clocks.blackMs } : null,
+        status: gs.status ?? null,
+        sideToMove: gs.sideToMove ?? null,
       }
       applyFullState(st)
       return
@@ -126,45 +130,41 @@ export function GamePage() {
 
     if (msg.type === 'MOVE_ACCEPTED') {
       setError(null)
-      // If this was an opponent move (clientMoveId == null), fetch full state to update move list.
-      if (!msg.clientMoveId) {
+      const ma = msg as MsgMoveAccepted
+      if (!ma.clientMoveId) {
         try {
           const st = await getGameState(gameId)
           applyFullState(st)
         } catch {
-          // fallback: at least update fen/clocks
           setState((prev) =>
             prev
               ? {
                   ...prev,
-                  fen: msg.fen,
-                  clocks: msg.clocks ? { whiteMs: msg.clocks.whiteMs, blackMs: msg.clocks.blackMs } : prev.clocks,
+                  fen: ma.fen,
+                  clocks: ma.clocks ? { whiteMs: ma.clocks.whiteMs, blackMs: ma.clocks.blackMs } : prev.clocks,
                 }
               : prev,
           )
-          chessRef.current.load(msg.fen)
+          chessRef.current.load(ma.fen)
         }
         return
       }
-
-      // our optimistic move: just accept authoritative fen/clocks
       pendingClientMoveId.current = null
       setState((prev) =>
         prev
           ? {
               ...prev,
-              fen: msg.fen,
-              clocks: msg.clocks ? { whiteMs: msg.clocks.whiteMs, blackMs: msg.clocks.blackMs } : prev.clocks,
+              fen: ma.fen,
+              clocks: ma.clocks ? { whiteMs: ma.clocks.whiteMs, blackMs: ma.clocks.blackMs } : prev.clocks,
             }
           : prev,
       )
-      chessRef.current.load(msg.fen)
+      chessRef.current.load(ma.fen)
       return
     }
 
     if (msg.type === 'MOVE_REJECTED') {
-      const reason = msg.reason || 'MOVE_REJECTED'
-      setError(reason)
+      setError(String((msg as { reason?: string }).reason || 'MOVE_REJECTED'))
       pendingClientMoveId.current = null
       // Resync from server to rollback
       try {
@@ -177,7 +177,8 @@ export function GamePage() {
     }
 
     if (msg.type === 'GAME_FINISHED') {
-      setState((prev) => (prev ? { ...prev, status: 'FINISHED', result: msg.result, finishReason: msg.reason } : prev))
+      const gf = msg as MsgGameFinished
+      setState((prev) => (prev ? { ...prev, status: 'FINISHED', result: gf.result, finishReason: gf.reason } : prev))
       return
     }
   }
@@ -255,7 +256,18 @@ export function GamePage() {
   if (!gameId) return null
 
   const boardOrientation = myColor ?? 'white'
-  const fen = state?.fen || 'start'
+  const fen = state?.fen || STARTING_FEN
+
+  if (state === null && !error) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-6 py-4">
+          <div className="text-slate-300">Loading game…</div>
+          <div className="mt-1 text-xs text-slate-500">{gameId}</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr_1fr]">

@@ -1,5 +1,8 @@
 import { api } from '../../shared/api/apiClient'
 
+/** Standard starting position FEN. */
+export const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
 export type GameMove = { ply: number; uci: string; san?: string | null; fenAfter?: string | null; byUserId?: string | null }
 export type GameState = {
   gameId: string

@@ -28,14 +28,11 @@ ENV JAVA_CDS_OPTS="-XX:SharedArchiveFile=app.jsa -Xlog:class+load:file=/tmp/clas
 ENV JAVA_ERROR_FILE_OPTS="-XX:ErrorFile=/tmp/java_error.log"
 ENV JAVA_HEAP_DUMP_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp"
 ENV JAVA_ON_OUT_OF_MEMORY_OPTS="-XX:+ExitOnOutOfMemoryError"
-ENV JAVA_NATIVE_MEMORY_TRACKING_OPTS="-XX:NativeMemoryTracking=summary -XX:+UnlockDiagnosticVMObjects -XX:+PrintNMTStatistics"
-
 EXPOSE 8086
 
 ENTRYPOINT exec java \
     $JAVA_HEAP_DUMP_OPTS \
     $JAVA_ON_OUT_OF_MEMORY_OPTS \
     $JAVA_ERROR_FILE_OPTS \
-    $JAVA_NATIVE_MEMORY_TRACKING_OPTS \
     $JAVA_CDS_OPTS \
     -jar app.jar

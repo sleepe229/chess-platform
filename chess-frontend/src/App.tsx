@@ -9,6 +9,7 @@ import { ProfilePage } from './features/profile/ProfilePage'
 import { GamePage } from './features/game/GamePage'
 import { GamesPage } from './features/history/GamesPage'
 import { GameReviewPage } from './features/history/GameReviewPage'
+import { ErrorBoundary } from './shared/ErrorBoundary'
 
 export default function App() {
   return (
@@ -40,7 +41,9 @@ export default function App() {
             path="/game/:gameId"
             element={
               <RequireAuth>
-                <GamePage />
+                <ErrorBoundary>
+                  <GamePage />
+                </ErrorBoundary>
               </RequireAuth>
             }
           />
