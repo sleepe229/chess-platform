@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Chess } from 'chess.js'
 import { useAuthStore } from '../../shared/auth/authStore'
@@ -55,17 +55,14 @@ export function GamePage() {
     },
   })
 
-  const myColor: Color | null = useMemo(() => {
+  const myColor: Color | null = (() => {
     if (!me?.userId || !state) return null
     if (String(state.whiteId) === me.userId) return 'white'
     if (String(state.blackId) === me.userId) return 'black'
     return null
-  }, [me?.userId, state?.whiteId, state?.blackId])
+  })()
 
-  const opponentId = useMemo(() => {
-    if (!state || !myColor) return null
-    return myColor === 'white' ? String(state.blackId) : String(state.whiteId)
-  }, [state, myColor])
+  const opponentId = state && myColor ? (myColor === 'white' ? String(state.blackId) : String(state.whiteId)) : null
 
   const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
   const [confirmResign, setConfirmResign] = useState(false)

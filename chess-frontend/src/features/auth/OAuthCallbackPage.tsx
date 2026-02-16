@@ -1,7 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../shared/auth/authStore'
 import { loadMe } from './authApi'
+
+type OAuthCallbackPayload = {
+  error: string | null
+  accessToken: string | null
+  refreshToken: string | null
+  expiresInSeconds: number
+}
+
+function parseOAuthCallbackHash(hash: string): OAuthCallbackPayload {
+  const normalizedHash = hash.startsWith('#') ? hash.slice(1) : hash
+  const params = new URLSearchParams(normalizedHash)
+  const error = params.get('error')
+
+  if (error) {
+    return {
+      error,
+      accessToken: null,
+      refreshToken: null,
+      expiresInSeconds: 0,
+    }
+  }
+
+  const accessToken = params.get('access_token')
+  const refreshToken = params.get('refresh_token')
+  if (!accessToken || !refreshToken) {
+    return {
+      error: 'missing_tokens',
+      accessToken: null,
+      refreshToken: null,
+      expiresInSeconds: 0,
+    }
+  }
+
+  const expiresIn = parseInt(params.get('expires_in') || '0', 10) || 900
+  return {
+    error: null,
+    accessToken,
+    refreshToken,
+    expiresInSeconds: expiresIn,
+  }
+}
 
 /**
  * OAuth2 callback: backend redirects here with tokens in hash (#access_token=...&refresh_token=...&expires_in=...).
@@ -9,33 +50,25 @@ import { loadMe } from './authApi'
  */
 export function OAuthCallbackPage() {
   const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
+  const callback = useMemo(() => parseOAuthCallbackHash(window.location.hash || ''), [])
+  const [loadMeError, setLoadMeError] = useState<string | null>(null)
+  const error = callback.error ?? loadMeError
 
   useEffect(() => {
-    const hash = window.location.hash?.slice(1) || ''
-    const params = new URLSearchParams(hash)
-    const err = params.get('error')
-    if (err) {
-      setError(err)
+    if (callback.error || !callback.accessToken || !callback.refreshToken) {
       return
     }
-    const accessToken = params.get('access_token')
-    const refreshToken = params.get('refresh_token')
-    const expiresIn = params.get('expires_in')
-    if (!accessToken || !refreshToken) {
-      setError('missing_tokens')
-      return
-    }
-    const expiresInSeconds = parseInt(expiresIn || '0', 10) || 900
+
     useAuthStore.getState().setTokens({
-      accessToken,
-      refreshToken,
-      expiresAtMs: Date.now() + expiresInSeconds * 1000,
+      accessToken: callback.accessToken,
+      refreshToken: callback.refreshToken,
+      expiresAtMs: Date.now() + callback.expiresInSeconds * 1000,
     })
+
     loadMe()
       .then(() => navigate('/lobby', { replace: true }))
-      .catch(() => setError('load_me_failed'))
-  }, [navigate])
+      .catch(() => setLoadMeError('load_me_failed'))
+  }, [callback, navigate])
 
   if (error) {
     return (
