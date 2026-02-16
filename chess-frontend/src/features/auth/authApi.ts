@@ -34,8 +34,13 @@ export async function register(email: string, password: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  const tokens = useAuthStore.getState().tokens
   try {
-    await api.post('/v1/auth/logout', null)
+    if (tokens?.refreshToken) {
+      await api.post('/v1/auth/logout', { refreshToken: tokens.refreshToken })
+    } else {
+      await api.post('/v1/auth/logout', null)
+    }
   } finally {
     useAuthStore.getState().logout()
   }

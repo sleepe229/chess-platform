@@ -76,7 +76,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal SecurityUser user,
-            @Valid @RequestBody(required = false) LogoutRequest request) {
+            @RequestBody(required = false) @Valid LogoutRequest request) {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

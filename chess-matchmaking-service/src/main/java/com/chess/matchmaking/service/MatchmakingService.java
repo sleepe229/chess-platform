@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.UUID;
 
 @Service
@@ -97,7 +98,7 @@ public class MatchmakingService {
             MatchmakingRequestStore.StoredRequest r1 = requestStore.getRequest(pair.requestId1());
             MatchmakingRequestStore.StoredRequest r2 = requestStore.getRequest(pair.requestId2());
             if (r1 != null && r2 != null) {
-                boolean whiteFirst = (System.nanoTime() & 1) == 0;
+                boolean whiteFirst = new SecureRandom().nextBoolean();
                 String white = whiteFirst ? r1.userId() : r2.userId();
                 String black = whiteFirst ? r2.userId() : r1.userId();
 

@@ -234,10 +234,14 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
       GAME_SERVICE_BASE_URL: http://chess-game-service:8084
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST:-redis}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT:-6379}
     ports:
       - "${WS_SERVICE_PORT}:8085"
     depends_on:
       nats:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       chess-game-service:
         condition: service_started

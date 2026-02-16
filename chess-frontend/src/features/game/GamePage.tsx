@@ -12,6 +12,7 @@ type MsgGameFinished = WsServerMessage & { type: 'GAME_FINISHED'; result: string
 import { acceptDraw, getGameState, offerDraw, resign, type GameState } from './gameApi'
 import { getErrorMessage } from '../../shared/utils/getErrorMessage'
 import { STARTING_FEN } from './gameApi'
+import { getPublicProfile } from '../profile/profileApi'
 
 type Color = 'white' | 'black'
 
@@ -30,6 +31,7 @@ export function GamePage() {
 
   const [localWhiteMs, setLocalWhiteMs] = useState<number | null>(null)
   const [localBlackMs, setLocalBlackMs] = useState<number | null>(null)
+  const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
 
   const chessRef = useRef(new Chess())
   const wsRef = useRef<GameWsClient | null>(null)
@@ -41,6 +43,20 @@ export function GamePage() {
     if (String(state.blackId) === me.userId) return 'black'
     return null
   }, [me?.userId, state?.whiteId, state?.blackId])
+
+  const opponentId = useMemo(() => {
+    if (!state || !myColor) return null
+    return myColor === 'white' ? String(state.blackId) : String(state.whiteId)
+  }, [state, myColor])
+
+  useEffect(() => {
+    if (!opponentId) return
+    let cancelled = false
+    getPublicProfile(opponentId)
+      .then((profile) => { if (!cancelled) setOpponentUsername(profile.username) })
+      .catch(() => { if (!cancelled) setOpponentUsername(null) })
+    return () => { cancelled = true }
+  }, [opponentId])
 
   useEffect(() => {
     if (!gameId) return
@@ -203,6 +219,9 @@ export function GamePage() {
 
     if (!move) return false
 
+    const promotionPiece = move.promotion ? String(move.promotion).toLowerCase() : null
+    const uci = uciFromSquares(sourceSquare, targetSquare, promotionPiece)
+
     // optimistic update in UI
     const clientMoveId = crypto.randomUUID()
     pendingClientMoveId.current = clientMoveId
@@ -211,7 +230,7 @@ export function GamePage() {
         ? {
             ...prev,
             fen: chess.fen(),
-            moves: [...(prev.moves || []), { ply: (prev.moves?.length || 0) + 1, uci: uciFromSquares(sourceSquare, targetSquare, null), san: move.san }],
+            moves: [...(prev.moves || []), { ply: (prev.moves?.length || 0) + 1, uci, san: move.san }],
           }
         : prev,
     )
@@ -220,7 +239,7 @@ export function GamePage() {
       type: 'MOVE',
       gameId,
       clientMoveId,
-      uci: uciFromSquares(sourceSquare, targetSquare, null),
+      uci,
     })
 
     // if server rejects later, we will resync; keep a local rollback if ws is down immediately
@@ -274,7 +293,7 @@ export function GamePage() {
       <div className="space-y-4">
         <Card>
           <div className="text-sm text-slate-400">Opponent</div>
-          <div className="mt-1 font-medium">{myColor === 'white' ? state?.blackId : state?.whiteId}</div>
+          <div className="mt-1 font-medium">{opponentUsername || opponentId || '—'}</div>
           <div className="mt-2 text-xs text-slate-500">gameId: {gameId}</div>
         </Card>
 
@@ -285,13 +304,31 @@ export function GamePage() {
         </Card>
 
         <Card className="space-y-2">
-          <Button variant="danger" className="w-full" onClick={onResign}>
+          <Button
+            variant="danger"
+            className="w-full"
+            onClick={onResign}
+            aria-label="Resign the game"
+            type="button"
+          >
             Resign
           </Button>
-          <Button variant="secondary" className="w-full" onClick={onOfferDraw}>
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={onOfferDraw}
+            aria-label="Offer a draw to your opponent"
+            type="button"
+          >
             Offer draw
           </Button>
-          <Button variant="secondary" className="w-full" onClick={onAcceptDraw}>
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={onAcceptDraw}
+            aria-label="Accept your opponent’s draw offer"
+            type="button"
+          >
             Accept draw
           </Button>
         </Card>
