@@ -59,6 +59,11 @@ public class RouteConfig {
                         .path("/auth/**")
                         .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
 
+                // OAuth2 callback (Google redirects to /login/oauth2/code/google)
+                .route("auth-oauth2-callback", r -> r
+                        .path("/login/oauth2/**")
+                        .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
+
                 // User Service Routes - v1 API
                 .route("user-service-v1", r -> r
                         .path("/v1/users/**")

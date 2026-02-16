@@ -1,6 +1,7 @@
 package com.chess.events.game;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,9 +36,9 @@ public class GameFinishedEvent {
     @NotBlank
     private String pgn;
 
-    @NotBlank
+    @NotNull
     private Boolean rated;
-    
+
     @NotBlank
     private String timeControlType;
 }

@@ -17,6 +17,7 @@ export type WsServerMessage =
       clocks?: { whiteMs: number; blackMs: number }
       status?: string | null
       sideToMove?: string | null
+      drawOfferedBy?: string | null
     }
   | {
       type: 'MOVE_ACCEPTED'

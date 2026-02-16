@@ -1,6 +1,11 @@
-import { api, apiRequest } from '../../shared/api/apiClient'
+import { api, apiRequest, getApiBaseUrl } from '../../shared/api/apiClient'
 import { useAuthStore } from '../../shared/auth/authStore'
 import type { UserProfile } from '../../shared/auth/types'
+
+/** URL to start OAuth2 login (redirects to provider, then back to app with tokens). */
+export function getOAuth2LoginUrl(provider: 'google' | 'github' = 'google'): string {
+  return `${getApiBaseUrl()}/auth/oauth2/authorization/${provider}`
+}
 
 type AuthResponse = {
   accessToken: string
@@ -34,8 +39,13 @@ export async function register(email: string, password: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  const tokens = useAuthStore.getState().tokens
   try {
-    await api.post('/v1/auth/logout', null)
+    if (tokens?.refreshToken) {
+      await api.post('/v1/auth/logout', { refreshToken: tokens.refreshToken })
+    } else {
+      await api.post('/v1/auth/logout', null)
+    }
   } finally {
     useAuthStore.getState().logout()
   }

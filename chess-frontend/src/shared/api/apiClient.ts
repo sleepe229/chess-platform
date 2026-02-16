@@ -15,6 +15,11 @@ function apiBaseUrl(): string {
   return v && v.trim().length > 0 ? v.trim().replace(/\/$/, '') : ''
 }
 
+/** Base URL for API (e.g. for OAuth2 redirect). */
+export function getApiBaseUrl(): string {
+  return apiBaseUrl() || (typeof window !== 'undefined' ? window.location.origin : '')
+}
+
 function newRequestId(): string {
   // modern browsers
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -101,13 +106,23 @@ export async function apiRequest<T>(
     body,
   })
 
-  if (res.status === 401 && retryOn401) {
+  if ((res.status === 401 || res.status === 403) && retryOn401) {
     await refreshTokens()
     return apiRequest<T>(path, init, { retryOn401: false })
   }
 
   if (!res.ok) {
     const err = await readError(res)
+    if (res.status === 403) {
+      useAuthStore.getState().logout()
+      throw new ApiError({
+        status: 403,
+        code: err?.error,
+        message: 'Session expired',
+        traceId: err?.traceId,
+        details: err?.details,
+      })
+    }
     throw new ApiError({
       status: res.status,
       code: err?.error,

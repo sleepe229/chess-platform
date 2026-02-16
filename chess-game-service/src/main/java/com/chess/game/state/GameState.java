@@ -21,6 +21,8 @@ public class GameState {
     private UUID blackId;
 
     private String fen;
+    /** Side to move (WHITE/BLACK), derived from FEN when state is built. */
+    private String sideToMove;
     private GameClocks clocks;
     private GameTimeControl timeControl;
     private boolean rated;

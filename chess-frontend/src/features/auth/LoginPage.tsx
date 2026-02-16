@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { login } from './authApi'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { login, getOAuth2LoginUrl } from './authApi'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
 import { Card } from '../../shared/ui/Card'
@@ -8,10 +8,12 @@ import { getErrorMessage } from '../../shared/utils/getErrorMessage'
 
 export function LoginPage() {
   const nav = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const from = (location.state as { from?: string } | null)?.from ?? '/lobby'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,7 +21,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       await login(email.trim(), password)
-      nav('/lobby', { replace: true })
+      nav(from, { replace: true })
     } catch (e: unknown) {
       setError(getErrorMessage(e) || 'Login failed')
     } finally {
@@ -49,6 +51,19 @@ export function LoginPage() {
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? 'Signing in…' : 'Sign in'}
           </Button>
+
+          <div className="relative my-4">
+            <span className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-600" />
+            </span>
+            <span className="relative flex justify-center text-xs text-slate-400">or</span>
+          </div>
+          <a
+            href={getOAuth2LoginUrl('google')}
+            className="flex items-center justify-center gap-2 w-full rounded-lg border border-slate-600 bg-slate-800/50 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700/50 transition-colors"
+          >
+            Sign in with Google
+          </a>
         </form>
 
         <div className="mt-4 text-sm text-slate-300">

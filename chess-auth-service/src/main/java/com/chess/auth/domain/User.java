@@ -25,7 +25,16 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false, name = "password_hash")
+    /** LOCAL for email/password; GOOGLE, GITHUB, etc. for OAuth2. */
+    @Column(name = "auth_provider", nullable = false, length = 32)
+    @Builder.Default
+    private String authProvider = "LOCAL";
+
+    /** Provider's user id (e.g. Google 'sub'). Null for LOCAL. */
+    @Column(name = "provider_user_id", length = 255)
+    private String providerUserId;
+
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @ElementCollection(fetch = FetchType.LAZY)

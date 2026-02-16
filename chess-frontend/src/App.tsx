@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthGate } from './features/auth/AuthGate'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
+import { OAuthCallbackPage } from './features/auth/OAuthCallbackPage'
 import { AppLayout } from './shared/layout/AppLayout'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { LobbyPage } from './features/lobby/LobbyPage'
@@ -9,16 +10,21 @@ import { ProfilePage } from './features/profile/ProfilePage'
 import { GamePage } from './features/game/GamePage'
 import { GamesPage } from './features/history/GamesPage'
 import { GameReviewPage } from './features/history/GameReviewPage'
+import { ErrorBoundary } from './shared/ErrorBoundary'
+import { NotFoundPage } from './shared/NotFoundPage'
+import { ToastBar } from './shared/ui/ToastBar'
 
 export default function App() {
   return (
     <AuthGate>
+      <ToastBar />
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/lobby" replace />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
           <Route
             path="/lobby"
@@ -40,7 +46,9 @@ export default function App() {
             path="/game/:gameId"
             element={
               <RequireAuth>
-                <GamePage />
+                <ErrorBoundary>
+                  <GamePage />
+                </ErrorBoundary>
               </RequireAuth>
             }
           />
@@ -61,7 +69,7 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/lobby" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </AuthGate>

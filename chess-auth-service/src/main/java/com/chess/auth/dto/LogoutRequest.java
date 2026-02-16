@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LogoutRequest {
 
-    @NotBlank(message = "Refresh token is required")
+    /** Optional: when provided, the refresh token is revoked server-side. */
     private String refreshToken;
 }
 

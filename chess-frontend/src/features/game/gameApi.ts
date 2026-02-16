@@ -1,5 +1,8 @@
 import { api } from '../../shared/api/apiClient'
 
+/** Standard starting position FEN. */
+export const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
 export type GameMove = { ply: number; uci: string; san?: string | null; fenAfter?: string | null; byUserId?: string | null }
 export type GameState = {
   gameId: string
@@ -12,6 +15,38 @@ export type GameState = {
   sideToMove?: string | null
   result?: string | null
   finishReason?: string | null
+  drawOfferedBy?: string | null
+}
+
+/** WS GAME_STATE message shape (subset of full WS protocol). */
+export type WsGameStatePayload = {
+  gameId: string
+  whiteId: string
+  blackId: string
+  fen: string
+  moves?: { ply: number; uci: string; san?: string | null }[]
+  clocks?: { whiteMs: number; blackMs: number }
+  status?: string | null
+  sideToMove?: string | null
+  drawOfferedBy?: string | null
+}
+
+export function wsMessageToGameState(gs: WsGameStatePayload): GameState {
+  return {
+    gameId: String(gs.gameId),
+    whiteId: String(gs.whiteId),
+    blackId: String(gs.blackId),
+    fen: gs.fen,
+    moves: (gs.moves ?? []).map((m) => ({
+      ply: m.ply,
+      uci: m.uci,
+      san: m.san ?? null,
+    })),
+    clocks: gs.clocks ? { whiteMs: gs.clocks.whiteMs, blackMs: gs.clocks.blackMs } : null,
+    status: gs.status ?? null,
+    sideToMove: gs.sideToMove ?? null,
+    drawOfferedBy: gs.drawOfferedBy != null ? String(gs.drawOfferedBy) : null,
+  }
 }
 
 export async function getGameState(gameId: string): Promise<GameState> {

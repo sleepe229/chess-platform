@@ -64,10 +64,12 @@ public class GameEventsListener {
     private JetStreamSubscription subTimeExpired;
 
     private static final String CONSUMER = "ws-service-domain-game";
-    private static final String DURABLE_STARTED = "ws-service-game-started";
-    private static final String DURABLE_MOVE = "ws-service-game-move";
-    private static final String DURABLE_FINISHED = "ws-service-game-finished";
-    private static final String DURABLE_TIME_EXPIRED = "ws-service-game-time-expired";
+    /** Version suffix so new consumer config (e.g. ackWait) doesn't conflict with existing consumers in JetStream. */
+    private static final String DURABLE_SUFFIX = "-v2";
+    private static final String DURABLE_STARTED = "ws-service-game-started" + DURABLE_SUFFIX;
+    private static final String DURABLE_MOVE = "ws-service-game-move" + DURABLE_SUFFIX;
+    private static final String DURABLE_FINISHED = "ws-service-game-finished" + DURABLE_SUFFIX;
+    private static final String DURABLE_TIME_EXPIRED = "ws-service-game-time-expired" + DURABLE_SUFFIX;
 
     @PostConstruct
     public void init() {
@@ -335,6 +337,7 @@ public class GameEventsListener {
                 .clocks(state.getClocks())
                 .status(state.getStatus())
                 .sideToMove(state.getSideToMove())
+                .drawOfferedBy(state.getDrawOfferedBy())
                 .build();
     }
 

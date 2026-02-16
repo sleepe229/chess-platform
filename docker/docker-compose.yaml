@@ -7,6 +7,7 @@ volumes:
   postgres-user-data:
   postgres-game-data:
   postgres-matchmaking-data:
+  postgres-analytics-data:
   redis-data:
 
 services:
@@ -16,12 +17,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: chess_auth
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,12 +35,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: chess_user
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - postgres-user-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,12 +53,12 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: chess_game
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - postgres-game-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,12 +71,30 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: chess_matchmaking
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - postgres-matchmaking-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  postgres-analytics:
+    image: postgres:17-alpine
+    container_name: chess-postgres-analytics
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_analytics
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres-analytics-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -101,9 +120,11 @@ services:
     image: nats:2.10-alpine
     container_name: chess-nats
     restart: unless-stopped
-    ports:
-      - "4222:4222"
-      - "8222:8222"
+    # NATS ports should not be exposed externally in production
+    # Only expose if needed for external monitoring/debugging
+    # ports:
+    #   - "4222:4222"
+    #   - "8222:8222"
     command: ["-js", "-m", "8222"]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
@@ -119,6 +140,17 @@ services:
       dockerfile: chess-auth-service/Dockerfile
     container_name: chess-auth-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:${DB_PORT}/chess_auth
@@ -128,6 +160,7 @@ services:
       SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
+      USER_SERVICE_BASE_URL: http://chess-user-service:8082
     ports:
       - "${AUTH_SERVICE_PORT}:8081"
     depends_on:
@@ -137,6 +170,8 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      chess-user-service:
+        condition: service_started
     networks:
       - chess-network
 
@@ -146,6 +181,17 @@ services:
       dockerfile: chess-user-service/Dockerfile
     container_name: chess-user-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:${DB_PORT}/chess_user
@@ -169,6 +215,17 @@ services:
       dockerfile: chess-matchmaking-service/Dockerfile
     container_name: chess-matchmaking-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-matchmaking:${DB_PORT}/chess_matchmaking
@@ -178,6 +235,7 @@ services:
       SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
+      USER_SERVICE_URL: http://chess-user-service:8082
     ports:
       - "${MATCHMAKING_SERVICE_PORT}:8083"
     depends_on:
@@ -187,6 +245,8 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      chess-user-service:
+        condition: service_started
     networks:
       - chess-network
 
@@ -196,17 +256,32 @@ services:
       dockerfile: chess-game-service/Dockerfile
     container_name: chess-game-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.75'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-game:${DB_PORT}/chess_game
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
     ports:
       - "${GAME_SERVICE_PORT}:8084"
     depends_on:
       postgres-game:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -219,16 +294,33 @@ services:
       dockerfile: chess-ws-service/Dockerfile
     container_name: chess-ws-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
       GAME_SERVICE_BASE_URL: http://chess-game-service:8084
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST:-redis}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT:-6379}
     ports:
       - "${WS_SERVICE_PORT}:8085"
     depends_on:
       nats:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      chess-game-service:
+        condition: service_started
     networks:
       - chess-network
 
@@ -238,14 +330,36 @@ services:
       dockerfile: chess-analytics-service/Dockerfile
     container_name: chess-analytics-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-analytics:${DB_PORT:-5432}/chess_analytics
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
+      ANALYSIS_ENGINE_ENABLED: "true"
+      ANALYSIS_ENGINE_PATH: "/application/stockfish"
     ports:
-      - "${ANALYTICS_SERVICE_PORT}:8086"
+      - "${ANALYTICS_SERVICE_PORT:-8086}:8086"
     depends_on:
+      postgres-analytics:
+        condition: service_healthy
       nats:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - chess-network
@@ -256,6 +370,17 @@ services:
       dockerfile: chess-api-gateway/Dockerfile
     container_name: chess-api-gateway
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       JWT_SECRET: ${JWT_SECRET}
@@ -296,14 +421,25 @@ services:
 
   chess-frontend:
     build:
-      context: ../chess-frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: chess-frontend/Dockerfile
     container_name: chess-frontend
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
       - "${FRONTEND_PORT}:80"
     depends_on:
       chess-api-gateway:
-        condition: service_started
+        condition: service_healthy
     networks:
       - chess-network

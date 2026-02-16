@@ -21,15 +21,18 @@ import com.github.bhlangonijr.chesslib.Board;
 
 @Slf4j
 @RestController
-@RequestMapping({"/v1/games", "/games"})
+@RequestMapping("/games")
 @RequiredArgsConstructor
 public class GameController {
 
     private final GameService gameService;
 
     @GetMapping("/{id}/state")
-    public ResponseEntity<GameStateResponse> state(@PathVariable UUID id) {
+    public ResponseEntity<GameStateResponse> state(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal SecurityUser user) {
         GameState state = gameService.getState(id);
+        gameService.ensureParticipant(state, user.getUserId());
         return ResponseEntity.ok(toResponse(state));
     }
 
@@ -77,14 +80,9 @@ public class GameController {
         List<GameMoveResponse> moves = state.getMoves() == null ? List.of() : state.getMoves().stream()
                 .map(GameController::toMove)
                 .toList();
-        String sideToMove = "UNKNOWN";
-        try {
-            Board board = new Board();
-            if (state.getFen() != null && !state.getFen().isBlank()) {
-                board.loadFromFen(state.getFen());
-                sideToMove = board.getSideToMove().name();
-            }
-        } catch (Exception ignored) {
+        String sideToMove = state.getSideToMove();
+        if (sideToMove == null || sideToMove.isBlank()) {
+            sideToMove = sideToMoveFromFen(state.getFen());
         }
 
         return GameStateResponse.builder()
@@ -101,6 +99,7 @@ public class GameController {
                 .sideToMove(sideToMove)
                 .result(state.getResult())
                 .finishReason(state.getFinishReason())
+                .drawOfferedBy(state.getDrawOfferedBy())
                 .build();
     }
 
@@ -113,6 +112,18 @@ public class GameController {
                 .playedAt(m.getPlayedAt())
                 .byUserId(m.getByUserId())
                 .build();
+    }
+
+    private static String sideToMoveFromFen(String fen) {
+        if (fen == null || fen.isBlank()) return "UNKNOWN";
+        try {
+            Board board = new Board();
+            board.loadFromFen(fen);
+            return board.getSideToMove().name();
+        } catch (Exception e) {
+            log.warn("Failed to parse FEN for sideToMove", e);
+            return "UNKNOWN";
+        }
     }
 }
 

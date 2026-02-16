@@ -1,0 +1,109 @@
+# =============================================================================
+# Chess Platform — Main CI
+# Backend (Maven/Java 21) + Frontend (Node/Vite) on push & PR to main.
+# Concurrency: cancel in-progress runs for the same ref. Caching for speed.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "CODE_REVIEW.md"
+      - ".gitignore"
+      - "docs/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "CODE_REVIEW.md"
+      - ".gitignore"
+      - "docs/**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "20"
+  MAVEN_OPTS: -Xmx1024m
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend: compile, unit tests, integration tests (Surefire + Failsafe)
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend (Maven)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
+  # ---------------------------------------------------------------------------
+  # Frontend: install, lint, build
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (Node)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chess-frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: chess-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Validate docker-compose and Dockerfiles (syntax / config)
+  # ---------------------------------------------------------------------------
+  docker-validate:
+    name: Docker config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate docker-compose
+        run: docker compose -f docker/docker-compose.yaml config --quiet
+
+      - name: Build one backend image (sanity check)
+        run: docker build -f chess-api-gateway/Dockerfile --target builder . 
+
+      - name: Build frontend image (sanity check)
+        run: docker build -f chess-frontend/Dockerfile --target build .

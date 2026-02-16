@@ -72,6 +72,10 @@ node_modules
 docker/.env
 amplicode.xml
 
+# Stockfish binaries (engine is built in Docker from source)
+stockfish/*.exe
+stockfish/src/stockfish
+
 # Logs
 *.log
 *.log.*

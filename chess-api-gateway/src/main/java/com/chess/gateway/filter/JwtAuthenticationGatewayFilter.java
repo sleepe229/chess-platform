@@ -34,9 +34,12 @@ public class JwtAuthenticationGatewayFilter implements WebFilter {
             "/auth/register",
             "/auth/login",
             "/auth/refresh",
+            "/auth/oauth2",
+            "/auth/login/oauth2",
             "/v1/auth/register",
             "/v1/auth/login",
             "/v1/auth/refresh",
+            "/ws/",
             "/actuator"
     );
 
