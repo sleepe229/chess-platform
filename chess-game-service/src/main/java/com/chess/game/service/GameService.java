@@ -3,14 +3,7 @@ package com.chess.game.service;
 import com.chess.common.exception.ForbiddenException;
 import com.chess.common.exception.NotFoundException;
 import com.chess.common.exception.ValidationException;
-import com.chess.events.common.EventEnvelope;
-import com.chess.events.game.GameCreatedEvent;
-import com.chess.events.game.GameFinishedEvent;
-import com.chess.events.game.GameStartedEvent;
-import com.chess.events.game.MoveMadeEvent;
-import com.chess.events.game.TimeExpiredEvent;
 import com.chess.events.matchmaking.MatchFoundEvent;
-import com.chess.events.util.EventBuilder;
 import com.chess.game.domain.FinishReason;
 import com.chess.game.domain.GameStatus;
 import com.chess.game.repo.GameMoveRepository;
@@ -26,17 +19,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
-import io.nats.client.JetStream;
-import io.nats.client.impl.Headers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -44,29 +32,14 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class GameService {
-
-    private static final String PRODUCER = "game-service";
 
     private final GameRepository gameRepository;
     private final GameMoveRepository gameMoveRepository;
     private final GameStateStore stateStore;
     private final ObjectMapper objectMapper;
-
-    @Autowired(required = false)
-    private JetStream jetStream;
-
-    public GameService(
-            GameRepository gameRepository,
-            GameMoveRepository gameMoveRepository,
-            GameStateStore stateStore,
-            ObjectMapper objectMapper
-    ) {
-        this.gameRepository = gameRepository;
-        this.gameMoveRepository = gameMoveRepository;
-        this.stateStore = stateStore;
-        this.objectMapper = objectMapper;
-    }
+    private final GameEventPublisher gameEventPublisher;
 
     @Value("${game.active-ttl-seconds:7200}")
     private long activeTtlSeconds;
@@ -203,8 +176,8 @@ public class GameService {
         stateStore.put(state, Duration.ofSeconds(activeTtlSeconds));
         updateTimeoutIndex(state);
 
-        publishGameCreated(state);
-        publishGameStarted(state);
+        gameEventPublisher.publishGameCreated(state);
+        gameEventPublisher.publishGameStarted(state);
     }
 
     public GameState applyMove(UUID gameId, UUID userId, String uci, UUID clientMoveId) {
@@ -331,12 +304,12 @@ public class GameService {
                 finishedNow = true;
             }
 
-            publishMoveMade(state, gm, board, sideToMove);
+            gameEventPublisher.publishMoveMade(state, gm, board, sideToMove);
 
             if (finishedNow) {
                 stateStore.put(state, Duration.ofMinutes(30));
                 stateStore.removeTimeoutDeadline(gameId);
-                publishGameFinished(state);
+                gameEventPublisher.publishGameFinished(state);
             } else {
                 stateStore.put(state, Duration.ofSeconds(activeTtlSeconds));
                 updateTimeoutIndex(state);
@@ -372,7 +345,7 @@ public class GameService {
             finish(state, result, FinishReason.RESIGN);
             stateStore.put(state, Duration.ofMinutes(30));
             stateStore.removeTimeoutDeadline(gameId);
-            publishGameFinished(state);
+            gameEventPublisher.publishGameFinished(state);
             return state;
         } finally {
             stateStore.unlock(gameId);
@@ -401,7 +374,7 @@ public class GameService {
             finish(state, "1/2-1/2", FinishReason.DRAW_AGREEMENT);
             stateStore.put(state, Duration.ofMinutes(30));
             stateStore.removeTimeoutDeadline(gameId);
-            publishGameFinished(state);
+            gameEventPublisher.publishGameFinished(state);
             return state;
         } finally {
             stateStore.unlock(gameId);
@@ -472,8 +445,8 @@ public class GameService {
         UUID winner = timedOutUserId.equals(state.getWhiteId()) ? state.getBlackId() : state.getWhiteId();
         String result = winner.equals(state.getWhiteId()) ? "1-0" : "0-1";
         finish(state, result, FinishReason.TIMEOUT);
-        publishTimeExpired(state, timedOutUserId);
-        publishGameFinished(state);
+        gameEventPublisher.publishTimeExpired(state, timedOutUserId);
+        gameEventPublisher.publishGameFinished(state);
         return state;
     }
 
@@ -500,7 +473,7 @@ public class GameService {
         entity.setResult(result);
         entity.setFinishReason(reason.name());
         entity.setFinishedAt(state.getFinishedAt());
-        entity.setPgn(buildPgn(state));
+        entity.setPgn(PgnBuilder.buildPgn(state));
         entity.setCurrentFen(state.getFen());
         if (state.getClocks() != null) {
             entity.setWhiteMs(state.getClocks().getWhiteMs());
@@ -508,51 +481,6 @@ public class GameService {
             entity.setLastMoveAt(state.getClocks().getLastMoveAt());
         }
         gameRepository.save(entity);
-    }
-
-    private String buildPgn(GameState state) {
-        try {
-            String result = state.getResult() != null ? state.getResult() : "*";
-            String date = LocalDate.now(ZoneOffset.UTC).toString().replace("-", ".");
-            String timeControl = state.getTimeControl() != null
-                    ? state.getTimeControl().getBaseSeconds() + "+" + state.getTimeControl().getIncrementSeconds()
-                    : "";
-
-            StringBuilder pgn = new StringBuilder();
-            pgn.append("[Event \"Chess Online\"]\n");
-            pgn.append("[Site \"?\"]\n");
-            pgn.append("[Date \"").append(date).append("\"]\n");
-            pgn.append("[White \"").append(state.getWhiteId()).append("\"]\n");
-            pgn.append("[Black \"").append(state.getBlackId()).append("\"]\n");
-            pgn.append("[Result \"").append(result).append("\"]\n");
-            if (!timeControl.isBlank()) {
-                pgn.append("[TimeControl \"").append(timeControl).append("\"]\n");
-            }
-            pgn.append("\n");
-
-            StringBuilder sb = new StringBuilder();
-            int ply = 1;
-            for (GameMove m : state.getMoves()) {
-                if (ply % 2 == 1) {
-                    sb.append(((ply + 1) / 2)).append(". ");
-                }
-                sb.append(m.getSan() != null ? m.getSan() : m.getUci()).append(' ');
-                ply++;
-            }
-            pgn.append(sb.toString().trim());
-            if (!pgn.toString().endsWith(" ")) {
-                pgn.append(' ');
-            }
-            pgn.append(result);
-            return pgn.toString().trim();
-        } catch (Exception e) {
-            // fallback: UCI list
-            StringBuilder sb = new StringBuilder();
-            for (GameMove m : state.getMoves()) {
-                sb.append(m.getUci()).append(' ');
-            }
-            return sb.toString().trim();
-        }
     }
 
     private void updateTimeoutIndex(GameState state) {
@@ -575,111 +503,9 @@ public class GameService {
         }
     }
 
-    private void ensureParticipant(GameState state, UUID userId) {
+    public void ensureParticipant(GameState state, UUID userId) {
         if (!userId.equals(state.getWhiteId()) && !userId.equals(state.getBlackId())) {
             throw new ForbiddenException("User is not a participant of this game");
-        }
-    }
-
-    private void publishGameCreated(GameState state) {
-        GameCreatedEvent payload = GameCreatedEvent.builder()
-                .gameId(state.getGameId().toString())
-                .whitePlayerId(state.getWhiteId().toString())
-                .blackPlayerId(state.getBlackId().toString())
-                .timeControl(state.getTimeControl().getType())
-                .initialTimeSeconds(state.getTimeControl().getBaseSeconds())
-                .incrementSeconds(state.getTimeControl().getIncrementSeconds())
-                .build();
-        EventEnvelope<GameCreatedEvent> e = EventBuilder.envelope("GameCreated", PRODUCER, payload);
-        publishWithHeaders(com.chess.events.constants.NatsSubjects.GAME_CREATED, e);
-    }
-
-    private void publishGameStarted(GameState state) {
-        GameStartedEvent payload = GameStartedEvent.builder()
-                .gameId(state.getGameId().toString())
-                .startedAt(state.getStartedAt() != null ? state.getStartedAt().toString() : Instant.now().toString())
-                .build();
-        EventEnvelope<GameStartedEvent> e = EventBuilder.envelope("GameStarted", PRODUCER, payload);
-        publishWithHeaders(com.chess.events.constants.NatsSubjects.GAME_STARTED, e);
-    }
-
-    private void publishMoveMade(GameState state, GameMove gm, Board board, Side sideMoved) {
-        MoveMadeEvent payload = MoveMadeEvent.builder()
-                .gameId(state.getGameId().toString())
-                .moveNumber(gm.getPly())
-                .playerId(gm.getByUserId().toString())
-                .color(sideMoved == Side.WHITE ? "WHITE" : "BLACK")
-                .from(gm.getUci().substring(0, 2))
-                .to(gm.getUci().substring(2, 4))
-                .promotion(gm.getUci().length() > 4 ? gm.getUci().substring(4) : null)
-                .san(gm.getSan() != null ? gm.getSan() : gm.getUci())
-                .fen(gm.getFenAfter())
-                .whiteTimeLeftMs((int) Math.max(0, state.getClocks().getWhiteMs()))
-                .blackTimeLeftMs((int) Math.max(0, state.getClocks().getBlackMs()))
-                .isCheck(board.isKingAttacked())
-                .isCheckmate(board.isMated())
-                .isStalemate(board.isStaleMate())
-                .isDraw(board.isDraw())
-                .build();
-        EventEnvelope<MoveMadeEvent> e = EventBuilder.envelope("MoveMade", PRODUCER, payload);
-        publishWithHeaders(com.chess.events.constants.NatsSubjects.GAME_MOVE_MADE, e);
-    }
-
-    private void publishTimeExpired(GameState state, UUID timedOutUser) {
-        String color = timedOutUser.equals(state.getWhiteId()) ? "WHITE" : "BLACK";
-        TimeExpiredEvent payload = TimeExpiredEvent.builder()
-                .gameId(state.getGameId().toString())
-                .playerId(timedOutUser.toString())
-                .color(color)
-                .build();
-        EventEnvelope<TimeExpiredEvent> e = EventBuilder.envelope("TimeExpired", PRODUCER, payload);
-        publishWithHeaders(com.chess.events.constants.NatsSubjects.GAME_TIME_EXPIRED, e);
-    }
-
-    private void publishGameFinished(GameState state) {
-        GameFinishedEvent payload = GameFinishedEvent.builder()
-                .gameId(state.getGameId().toString())
-                .whitePlayerId(state.getWhiteId().toString())
-                .blackPlayerId(state.getBlackId().toString())
-                .result(state.getResult())
-                .finishReason(state.getFinishReason() != null ? state.getFinishReason() : FinishReason.ABORTED.name())
-                .winnerId(state.getWinnerId() != null ? state.getWinnerId().toString() : null)
-                .finishedAt(state.getFinishedAt() != null ? state.getFinishedAt().toString() : Instant.now().toString())
-                .pgn(buildPgn(state))
-                .rated(state.isRated())
-                .timeControlType(state.getTimeControl().getType())
-                .build();
-        EventEnvelope<GameFinishedEvent> e = EventBuilder.envelope("GameFinished", PRODUCER, payload);
-        publishWithHeaders(com.chess.events.constants.NatsSubjects.GAME_FINISHED, e);
-    }
-
-    private void publishWithHeaders(String subject, Object event) {
-        try {
-            if (jetStream == null) {
-                log.debug("JetStream is not configured; skipping publish to {}", subject);
-                return;
-            }
-
-            String json = objectMapper.writeValueAsString(event);
-
-            String eventId = null;
-            String correlationId = null;
-            if (event instanceof EventEnvelope<?> ee) {
-                eventId = ee.getEventId();
-                correlationId = ee.getCorrelationId();
-            }
-
-            Headers headers = new Headers();
-            if (eventId != null) {
-                headers.put("Nats-Msg-Id", eventId);
-            }
-            if (correlationId != null) {
-                headers.put("X-Correlation-Id", correlationId);
-            }
-
-            jetStream.publish(subject, headers, json.getBytes());
-        } catch (Exception e) {
-            log.error("Failed to publish event to subject={}", subject, e);
         }
     }
 }

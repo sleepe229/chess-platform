@@ -5,12 +5,17 @@ import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
 import { getGameState, STARTING_FEN, type GameState } from '../game/gameApi'
 import { getErrorMessage } from '../../shared/utils/getErrorMessage'
+import { requestAnalysis } from '../analytics/analyticsApi'
+import { useToastStore } from '../../shared/toast/toastStore'
 
 export function GameReviewPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const [state, setState] = useState<GameState | null>(null)
   const [idx, setIdx] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [analyzeLoading, setAnalyzeLoading] = useState(false)
+  const [analyzeRequested, setAnalyzeRequested] = useState(false)
+  const addToast = useToastStore((s) => s.add)
 
   useEffect(() => {
     if (!gameId) return
@@ -90,6 +95,29 @@ export function GameReviewPage() {
 
       <Card>
         <div className="text-lg font-semibold">Moves</div>
+        {gameId && state?.status === 'FINISHED' && (
+          <div className="mt-3">
+            <Button
+              variant="secondary"
+              disabled={analyzeLoading || analyzeRequested}
+              onClick={async () => {
+                if (!gameId) return
+                setAnalyzeLoading(true)
+                try {
+                  await requestAnalysis(gameId)
+                  setAnalyzeRequested(true)
+                  addToast('Analysis requested. Results will be available in the analysis jobs.', 'info')
+                } catch (e: unknown) {
+                  addToast(getErrorMessage(e) || 'Failed to request analysis')
+                } finally {
+                  setAnalyzeLoading(false)
+                }
+              }}
+            >
+              {analyzeLoading ? 'Requesting…' : analyzeRequested ? 'Analysis requested' : 'Analyze game'}
+            </Button>
+          </div>
+        )}
         <div className="mt-3 max-h-[560px] overflow-auto text-sm">
           <table className="w-full">
             <tbody>

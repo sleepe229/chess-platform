@@ -11,10 +11,12 @@ import { GamesPage } from './features/history/GamesPage'
 import { GameReviewPage } from './features/history/GameReviewPage'
 import { ErrorBoundary } from './shared/ErrorBoundary'
 import { NotFoundPage } from './shared/NotFoundPage'
+import { ToastBar } from './shared/ui/ToastBar'
 
 export default function App() {
   return (
     <AuthGate>
+      <ToastBar />
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/lobby" replace />} />

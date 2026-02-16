@@ -63,6 +63,10 @@
             <artifactId>chess-event-contracts</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.bhlangonijr</groupId>
+            <artifactId>chesslib</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>

@@ -138,6 +138,11 @@ services:
       dockerfile: chess-auth-service/Dockerfile
     container_name: chess-auth-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:${DB_PORT}/chess_auth
@@ -168,6 +173,11 @@ services:
       dockerfile: chess-user-service/Dockerfile
     container_name: chess-user-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:${DB_PORT}/chess_user
@@ -191,6 +201,11 @@ services:
       dockerfile: chess-matchmaking-service/Dockerfile
     container_name: chess-matchmaking-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-matchmaking:${DB_PORT}/chess_matchmaking
@@ -221,6 +236,11 @@ services:
       dockerfile: chess-game-service/Dockerfile
     container_name: chess-game-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.75'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-game:${DB_PORT}/chess_game
@@ -248,6 +268,11 @@ services:
       dockerfile: chess-ws-service/Dockerfile
     container_name: chess-ws-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       JWT_SECRET: ${JWT_SECRET}
@@ -273,6 +298,11 @@ services:
       dockerfile: chess-analytics-service/Dockerfile
     container_name: chess-analytics-service
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1'
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-analytics:${DB_PORT:-5432}/chess_analytics
@@ -282,6 +312,8 @@ services:
       SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
+      ANALYSIS_ENGINE_ENABLED: "true"
+      ANALYSIS_ENGINE_PATH: "/application/stockfish"
     ports:
       - "${ANALYTICS_SERVICE_PORT:-8086}:8086"
     depends_on:
@@ -300,6 +332,11 @@ services:
       dockerfile: chess-api-gateway/Dockerfile
     container_name: chess-api-gateway
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: '0.25'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 15s
@@ -350,6 +387,11 @@ services:
       dockerfile: chess-frontend/Dockerfile
     container_name: chess-frontend
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
     ports:
       - "3000:80"
     depends_on:

@@ -1,6 +1,9 @@
 package com.chess.analytics.messaging;
 
+import com.chess.events.analytics.AnalysisCompletedEvent;
+import com.chess.events.analytics.AnalysisFailedEvent;
 import com.chess.events.analytics.AnalysisRequestedEvent;
+import com.chess.events.common.EventEnvelope;
 import com.chess.events.constants.NatsSubjects;
 import com.chess.events.util.EventBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +44,42 @@ public class AnalyticsEventPublisher {
         } catch (Exception e) {
             log.error("Failed to publish AnalysisRequested", e);
             throw new RuntimeException("Failed to publish analysis request", e);
+        }
+    }
+
+    public void publishAnalysisCompleted(String analysisJobId, String gameId, int totalMoves, int accuracyWhite, int accuracyBlack) {
+        if (jetStream == null) return;
+        try {
+            AnalysisCompletedEvent payload = AnalysisCompletedEvent.builder()
+                    .analysisJobId(analysisJobId)
+                    .gameId(gameId)
+                    .totalMoves(totalMoves)
+                    .accuracyWhite(accuracyWhite)
+                    .accuracyBlack(accuracyBlack)
+                    .build();
+            EventEnvelope<AnalysisCompletedEvent> envelope = EventBuilder.envelope("AnalysisCompleted", PRODUCER, payload);
+            byte[] bytes = objectMapper.writeValueAsString(envelope).getBytes(StandardCharsets.UTF_8);
+            jetStream.publish(NatsSubjects.ANALYTICS_COMPLETED, bytes);
+            log.debug("Published AnalysisCompleted: jobId={}", analysisJobId);
+        } catch (Exception e) {
+            log.error("Failed to publish AnalysisCompleted", e);
+        }
+    }
+
+    public void publishAnalysisFailed(String analysisJobId, String gameId, String errorMessage) {
+        if (jetStream == null) return;
+        try {
+            AnalysisFailedEvent payload = AnalysisFailedEvent.builder()
+                    .analysisJobId(analysisJobId)
+                    .gameId(gameId)
+                    .errorMessage(errorMessage != null ? errorMessage : "Unknown error")
+                    .build();
+            EventEnvelope<AnalysisFailedEvent> envelope = EventBuilder.envelope("AnalysisFailed", PRODUCER, payload);
+            byte[] bytes = objectMapper.writeValueAsString(envelope).getBytes(StandardCharsets.UTF_8);
+            jetStream.publish(NatsSubjects.ANALYTICS_FAILED, bytes);
+            log.debug("Published AnalysisFailed: jobId={}", analysisJobId);
+        } catch (Exception e) {
+            log.error("Failed to publish AnalysisFailed", e);
         }
     }
 }

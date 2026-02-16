@@ -3,6 +3,8 @@ package com.chess.analytics.controller;
 import com.chess.analytics.dto.*;
 import com.chess.analytics.service.AnalysisJobService;
 import com.chess.analytics.service.AnalysisQueryService;
+import com.chess.common.exception.ForbiddenException;
+import com.chess.common.exception.NotFoundException;
 import com.chess.common.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,24 +34,48 @@ public class AnalysisController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal SecurityUser user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (playerId != null && !playerId.equals(user.getUserId())) {
+            throw new ForbiddenException("Can only list own games");
+        }
+        UUID effectivePlayerId = playerId != null ? playerId : user.getUserId();
         Pageable pageable = PageRequest.of(page, Math.min(size, 100));
-        Page<GameFactResponse> result = queryService.findGames(playerId, from, to, pageable);
+        Page<GameFactResponse> result = queryService.findGames(effectivePlayerId, from, to, pageable);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/games/{gameId}")
-    public ResponseEntity<GameFactResponse> getGame(@PathVariable UUID gameId) {
-        return queryService.findGameById(gameId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<GameFactResponse> getGame(
+            @PathVariable UUID gameId,
+            @AuthenticationPrincipal SecurityUser user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        GameFactResponse game = queryService.findGameById(gameId)
+                .orElseThrow(() -> new NotFoundException("Game not found"));
+        if (!user.getUserId().equals(game.getWhitePlayerId()) && !user.getUserId().equals(game.getBlackPlayerId())) {
+            throw new ForbiddenException("Not a participant of this game");
+        }
+        return ResponseEntity.ok(game);
     }
 
     @GetMapping("/games/{gameId}/summary")
-    public ResponseEntity<GameFactResponse> getGameSummary(@PathVariable UUID gameId) {
-        return queryService.findGameById(gameId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<GameFactResponse> getGameSummary(
+            @PathVariable UUID gameId,
+            @AuthenticationPrincipal SecurityUser user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        GameFactResponse game = queryService.findGameById(gameId)
+                .orElseThrow(() -> new NotFoundException("Game not found"));
+        if (!user.getUserId().equals(game.getWhitePlayerId()) && !user.getUserId().equals(game.getBlackPlayerId())) {
+            throw new ForbiddenException("Not a participant of this game");
+        }
+        return ResponseEntity.ok(game);
     }
 
     @GetMapping("/jobs")
@@ -91,7 +117,15 @@ public class AnalysisController {
     }
 
     @GetMapping("/players/{playerId}/stats")
-    public ResponseEntity<PlayerStatsResponse> getPlayerStats(@PathVariable UUID playerId) {
+    public ResponseEntity<PlayerStatsResponse> getPlayerStats(
+            @PathVariable UUID playerId,
+            @AuthenticationPrincipal SecurityUser user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (!playerId.equals(user.getUserId())) {
+            throw new ForbiddenException("Can only view own stats");
+        }
         PlayerStatsResponse stats = queryService.getPlayerStats(playerId);
         return ResponseEntity.ok(stats);
     }

@@ -28,8 +28,11 @@ public class GameController {
     private final GameService gameService;
 
     @GetMapping("/{id}/state")
-    public ResponseEntity<GameStateResponse> state(@PathVariable UUID id) {
+    public ResponseEntity<GameStateResponse> state(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal SecurityUser user) {
         GameState state = gameService.getState(id);
+        gameService.ensureParticipant(state, user.getUserId());
         return ResponseEntity.ok(toResponse(state));
     }
 
