@@ -1,4 +1,5 @@
 FROM bellsoft/liberica-openjdk-alpine:21-cds AS builder
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 WORKDIR /application
 COPY . .
 RUN --mount=type=cache,target=/root/.m2 chmod +x mvnw && ./mvnw clean install -DskipTests -pl chess-game-service -am
@@ -12,6 +13,7 @@ FROM bellsoft/liberica-openjre-alpine:21-cds
 
 VOLUME /tmp
 
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 RUN adduser -S spring-user
 USER spring-user
 

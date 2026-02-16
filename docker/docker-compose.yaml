@@ -296,12 +296,12 @@ services:
 
   chess-frontend:
     build:
-      context: ..
-      dockerfile: chess-frontend/Dockerfile
+      context: ../chess-frontend
+      dockerfile: Dockerfile
     container_name: chess-frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT}:80"
     depends_on:
       chess-api-gateway:
         condition: service_started

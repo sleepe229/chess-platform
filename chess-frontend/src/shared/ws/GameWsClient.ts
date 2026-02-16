@@ -1,5 +1,11 @@
 export type WsStatus = 'connected' | 'reconnecting' | 'disconnected'
 
+export type UnknownWsServerMessage = {
+  type: 'UNKNOWN'
+  rawType: string | null
+  raw: Record<string, unknown>
+}
+
 export type WsServerMessage =
   | {
       type: 'GAME_STATE'
@@ -22,11 +28,101 @@ export type WsServerMessage =
     }
   | { type: 'MOVE_REJECTED'; gameId: string; clientMoveId?: string | null; reason: string }
   | { type: 'GAME_FINISHED'; gameId: string; result: string; reason: string }
-  | ({ type: string } & Record<string, unknown>)
+  | UnknownWsServerMessage
 
 type Handlers = {
   onStatus?: (s: WsStatus) => void
   onMessage?: (msg: WsServerMessage) => void
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null
+}
+
+function asOptionalString(v: unknown): string | null | undefined {
+  if (v === undefined) return undefined
+  if (v === null) return null
+  return String(v)
+}
+
+function asOptionalNumber(v: unknown): number | undefined {
+  if (v === undefined || v === null) return undefined
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
+
+function parseWsServerMessage(raw: unknown): WsServerMessage | null {
+  if (!isRecord(raw)) return null
+  const t = raw.type
+  if (typeof t !== 'string') return null
+
+  if (t === 'GAME_STATE') {
+    const movesRaw = Array.isArray(raw.moves) ? raw.moves : undefined
+    const moves = movesRaw
+      ? movesRaw
+          .filter(isRecord)
+          .map((m) => ({
+            ply: Number(m.ply ?? 0),
+            uci: String(m.uci ?? ''),
+            san: asOptionalString(m.san) ?? undefined,
+          }))
+      : undefined
+
+    const clocksRaw = isRecord(raw.clocks) ? raw.clocks : null
+    const clocks =
+      clocksRaw && asOptionalNumber(clocksRaw.whiteMs) !== undefined && asOptionalNumber(clocksRaw.blackMs) !== undefined
+        ? { whiteMs: asOptionalNumber(clocksRaw.whiteMs)!, blackMs: asOptionalNumber(clocksRaw.blackMs)! }
+        : undefined
+
+    return {
+      type: 'GAME_STATE',
+      gameId: String(raw.gameId ?? ''),
+      whiteId: String(raw.whiteId ?? ''),
+      blackId: String(raw.blackId ?? ''),
+      fen: String(raw.fen ?? ''),
+      moves,
+      clocks,
+      status: asOptionalString(raw.status),
+      sideToMove: asOptionalString(raw.sideToMove),
+    }
+  }
+
+  if (t === 'MOVE_ACCEPTED') {
+    const clocksRaw = isRecord(raw.clocks) ? raw.clocks : null
+    const clocks =
+      clocksRaw && asOptionalNumber(clocksRaw.whiteMs) !== undefined && asOptionalNumber(clocksRaw.blackMs) !== undefined
+        ? { whiteMs: asOptionalNumber(clocksRaw.whiteMs)!, blackMs: asOptionalNumber(clocksRaw.blackMs)! }
+        : undefined
+
+    return {
+      type: 'MOVE_ACCEPTED',
+      gameId: String(raw.gameId ?? ''),
+      clientMoveId: asOptionalString(raw.clientMoveId),
+      ply: raw.ply === undefined ? undefined : raw.ply === null ? null : Number(raw.ply),
+      fen: String(raw.fen ?? ''),
+      clocks,
+    }
+  }
+
+  if (t === 'MOVE_REJECTED') {
+    return {
+      type: 'MOVE_REJECTED',
+      gameId: String(raw.gameId ?? ''),
+      clientMoveId: asOptionalString(raw.clientMoveId),
+      reason: String(raw.reason ?? ''),
+    }
+  }
+
+  if (t === 'GAME_FINISHED') {
+    return {
+      type: 'GAME_FINISHED',
+      gameId: String(raw.gameId ?? ''),
+      result: String(raw.result ?? ''),
+      reason: String(raw.reason ?? ''),
+    }
+  }
+
+  return { type: 'UNKNOWN', rawType: t, raw }
 }
 
 function wsBaseUrl(): string {
@@ -107,8 +203,9 @@ export class GameWsClient {
 
     ws.onmessage = (ev) => {
       try {
-        const msg = JSON.parse(String(ev.data)) as WsServerMessage
-        this.handlers.onMessage?.(msg)
+        const parsed = JSON.parse(String(ev.data)) as unknown
+        const msg = parseWsServerMessage(parsed)
+        if (msg) this.handlers.onMessage?.(msg)
       } catch {
         // ignore malformed
       }
