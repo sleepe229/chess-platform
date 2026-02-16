@@ -1,11 +1,38 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 
-type ClockSnapshot = {
-  whiteMs: number | null
-  blackMs: number | null
-  status: string | null
-  sideToMove: string | null
-  syncedAtMs: number
+type ClockState = {
+  localWhiteMs: number | null
+  localBlackMs: number | null
+}
+
+type ClockAction =
+  | {
+      type: 'sync'
+      whiteMs: number | null | undefined
+      blackMs: number | null | undefined
+    }
+  | {
+      type: 'tick'
+      sideToMove: string | null
+    }
+
+function clocksReducer(state: ClockState, action: ClockAction): ClockState {
+  if (action.type === 'sync') {
+    return {
+      localWhiteMs: action.whiteMs ?? state.localWhiteMs,
+      localBlackMs: action.blackMs ?? state.localBlackMs,
+    }
+  }
+
+  const side = (action.sideToMove || '').toUpperCase()
+  if (side === 'WHITE' && typeof state.localWhiteMs === 'number') {
+    return { ...state, localWhiteMs: Math.max(0, state.localWhiteMs - 1000) }
+  }
+  if (side === 'BLACK' && typeof state.localBlackMs === 'number') {
+    return { ...state, localBlackMs: Math.max(0, state.localBlackMs - 1000) }
+  }
+
+  return state
 }
 
 export function useClocks(
@@ -14,54 +41,22 @@ export function useClocks(
   status: string | null,
   sideToMove: string | null
 ) {
-  const snapshotRef = useRef<ClockSnapshot>({
-    whiteMs: whiteMs ?? null,
-    blackMs: blackMs ?? null,
-    status,
-    sideToMove,
-    syncedAtMs: Date.now(),
+  const [state, dispatch] = useReducer(clocksReducer, {
+    localWhiteMs: whiteMs ?? null,
+    localBlackMs: blackMs ?? null,
   })
 
-  const nextWhiteMs = whiteMs ?? snapshotRef.current.whiteMs
-  const nextBlackMs = blackMs ?? snapshotRef.current.blackMs
-  if (
-    nextWhiteMs !== snapshotRef.current.whiteMs ||
-    nextBlackMs !== snapshotRef.current.blackMs ||
-    status !== snapshotRef.current.status ||
-    sideToMove !== snapshotRef.current.sideToMove
-  ) {
-    snapshotRef.current = {
-      whiteMs: nextWhiteMs,
-      blackMs: nextBlackMs,
-      status,
-      sideToMove,
-      syncedAtMs: Date.now(),
-    }
-  }
-
-  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    dispatch({ type: 'sync', whiteMs, blackMs })
+  }, [whiteMs, blackMs])
 
   useEffect(() => {
     if (status !== 'RUNNING') return
     const interval = window.setInterval(() => {
-      setNowMs(Date.now())
+      dispatch({ type: 'tick', sideToMove })
     }, 1000)
     return () => window.clearInterval(interval)
-  }, [status])
+  }, [status, sideToMove])
 
-  const snapshot = snapshotRef.current
-  const elapsedMs = snapshot.status === 'RUNNING' ? Math.max(0, nowMs - snapshot.syncedAtMs) : 0
-  const side = (snapshot.sideToMove || '').toUpperCase()
-
-  const localWhiteMs =
-    side === 'WHITE' && typeof snapshot.whiteMs === 'number'
-      ? Math.max(0, snapshot.whiteMs - elapsedMs)
-      : snapshot.whiteMs
-
-  const localBlackMs =
-    side === 'BLACK' && typeof snapshot.blackMs === 'number'
-      ? Math.max(0, snapshot.blackMs - elapsedMs)
-      : snapshot.blackMs
-
-  return { localWhiteMs, localBlackMs }
+  return state
 }
