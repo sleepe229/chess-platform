@@ -19,6 +19,7 @@ USER spring-user
 
 WORKDIR /application
 
+COPY --from=layers /application/app.jar ./
 COPY --from=layers /application/extracted/dependencies/ ./
 COPY --from=layers /application/extracted/spring-boot-loader/ ./
 COPY --from=layers /application/extracted/snapshot-dependencies/ ./

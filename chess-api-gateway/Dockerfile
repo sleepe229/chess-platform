@@ -13,15 +13,13 @@ FROM bellsoft/liberica-openjre-alpine:21-cds
 
 VOLUME /tmp
 
-RUN apk add --no-cache ca-certificates curl \
-    && update-ca-certificates \
-    && adduser -S spring-user
-
+RUN apk add --no-cache ca-certificates curl && update-ca-certificates
+RUN adduser -S spring-user
 USER spring-user
-
 
 WORKDIR /application
 
+COPY --from=layers /application/app.jar ./
 COPY --from=layers /application/extracted/dependencies/ ./
 COPY --from=layers /application/extracted/spring-boot-loader/ ./
 COPY --from=layers /application/extracted/snapshot-dependencies/ ./

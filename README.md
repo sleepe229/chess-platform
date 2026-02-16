@@ -6,7 +6,11 @@ Backend is Java 21 and Spring Boot 4 with Spring Cloud Gateway. Each domain has 
 
 You need Docker and Docker Compose to run the whole thing. For local dev you’ll need Java 21, Maven (or the project’s `./mvnw`), Node 20+, and npm.
 
-**Run with Docker.** From the repo root, create a `.env` (in `docker/` or project root). It should define at least `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `REDIS_HOST`, `REDIS_PORT`, `NATS_URL`; see `docker/.env.example` for the full list. Then:
+**Run with Docker.** From the repo root, create a `.env` (in `docker/` or project root). It should define at least `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `REDIS_HOST`, `REDIS_PORT`, `NATS_URL`; see `docker/.env.example` for the full list.
+
+**Login with Google:** To enable “Sign in with Google”, create an OAuth 2.0 Client ID (Web application) in [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add redirect URI `http://localhost:3000/login/oauth2/code/google`, and set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `docker/.env`. Without these, the app still runs but Google login returns “invalid_client”.
+
+Then:
 
 ```bash
 docker compose -f docker/docker-compose.yaml --env-file docker/.env up -d --build

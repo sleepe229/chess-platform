@@ -54,14 +54,22 @@ public class RouteConfig {
                         .filters(f -> f.stripPrefix(1)) // Remove /v1 prefix
                         .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
 
+                // OAuth2 initiation: /auth/oauth2/authorization/google -> auth-service must receive /oauth2/authorization/google (Spring Security default)
+                .route("auth-oauth2-authorization", r -> r
+                        .path("/auth/oauth2/**")
+                        .filters(f -> f.stripPrefix(1).preserveHostHeader())
+                        .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
+
                 // Auth Service Routes - legacy (backward compatibility)
                 .route("auth-service-legacy", r -> r
                         .path("/auth/**")
+                        .filters(f -> f.preserveHostHeader())
                         .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
 
                 // OAuth2 callback (Google redirects to /login/oauth2/code/google)
                 .route("auth-oauth2-callback", r -> r
                         .path("/login/oauth2/**")
+                        .filters(f -> f.preserveHostHeader())
                         .uri(String.format("http://%s:%d", authServiceHost, authServicePort)))
 
                 // User Service Routes - v1 API
