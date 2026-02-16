@@ -97,6 +97,8 @@ export function useGameWs({
 
   const [wsStatus, setWsStatus] = useState<WsStatus>('disconnected')
 
+  // Reconnect only when gameId or token changes; intentionally omit state/moves so we don't
+  // reconnect on every state update. Full state is applied on connect via GAME_STATE or getGameState.
   useEffect(() => {
     if (!gameId || !token) return
 

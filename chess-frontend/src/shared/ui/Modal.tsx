@@ -130,7 +130,7 @@ export function ConfirmModal({
       await Promise.resolve(onConfirm())
       onClose()
     } catch (e) {
-      setError(getErrorMessage(e) || 'Something went wrong')
+      setError(getErrorMessage(e, { includeTraceId: true }) || 'Something went wrong')
     } finally {
       setLoading(false)
     }
