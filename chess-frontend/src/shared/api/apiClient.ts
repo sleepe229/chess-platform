@@ -15,6 +15,11 @@ function apiBaseUrl(): string {
   return v && v.trim().length > 0 ? v.trim().replace(/\/$/, '') : ''
 }
 
+/** Base URL for API (e.g. for OAuth2 redirect). */
+export function getApiBaseUrl(): string {
+  return apiBaseUrl() || (typeof window !== 'undefined' ? window.location.origin : '')
+}
+
 function newRequestId(): string {
   // modern browsers
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {

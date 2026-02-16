@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthGate } from './features/auth/AuthGate'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
+import { OAuthCallbackPage } from './features/auth/OAuthCallbackPage'
 import { AppLayout } from './shared/layout/AppLayout'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { LobbyPage } from './features/lobby/LobbyPage'
@@ -23,6 +24,7 @@ export default function App() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
           <Route
             path="/lobby"

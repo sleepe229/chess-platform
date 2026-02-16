@@ -1,6 +1,11 @@
-import { api, apiRequest } from '../../shared/api/apiClient'
+import { api, apiRequest, getApiBaseUrl } from '../../shared/api/apiClient'
 import { useAuthStore } from '../../shared/auth/authStore'
 import type { UserProfile } from '../../shared/auth/types'
+
+/** URL to start OAuth2 login (redirects to provider, then back to app with tokens). */
+export function getOAuth2LoginUrl(provider: 'google' | 'github' = 'google'): string {
+  return `${getApiBaseUrl()}/auth/oauth2/authorization/${provider}`
+}
 
 type AuthResponse = {
   accessToken: string
