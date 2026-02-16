@@ -51,10 +51,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center px-4">
         <div className="max-w-md rounded-lg border border-slate-800 bg-slate-900 px-6 py-5">
           <div className="text-base font-semibold">Could not bootstrap session</div>
           <div className="mt-2 text-sm text-slate-300">{error}</div>
+          <a
+            href="/login"
+            className="mt-4 inline-block text-sm text-sky-400 hover:text-sky-300"
+          >
+            Sign in again
+          </a>
         </div>
       </div>
     )

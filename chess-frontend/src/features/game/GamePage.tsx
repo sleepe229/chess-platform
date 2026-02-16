@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Chess } from 'chess.js'
 import { Chessboard, type PieceDropHandlerArgs } from 'react-chessboard'
 import { useAuthStore } from '../../shared/auth/authStore'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
+import { ConfirmModal } from '../../shared/ui/Modal'
 import { GameWsClient, type WsServerMessage, type WsStatus } from '../../shared/ws/GameWsClient'
 
 type MsgMoveAccepted = WsServerMessage & { type: 'MOVE_ACCEPTED'; fen: string; clocks?: { whiteMs: number; blackMs: number } }
 type MsgGameFinished = WsServerMessage & { type: 'GAME_FINISHED'; result: string; reason: string }
-import { acceptDraw, getGameState, offerDraw, resign, type GameState } from './gameApi'
+import { acceptDraw, getGameState, offerDraw, resign, type GameState, wsMessageToGameState, STARTING_FEN } from './gameApi'
 import { getErrorMessage } from '../../shared/utils/getErrorMessage'
-import { STARTING_FEN } from './gameApi'
 import { getPublicProfile } from '../profile/profileApi'
 
 type Color = 'white' | 'black'
@@ -32,6 +32,9 @@ export function GamePage() {
   const [localWhiteMs, setLocalWhiteMs] = useState<number | null>(null)
   const [localBlackMs, setLocalBlackMs] = useState<number | null>(null)
   const [opponentUsername, setOpponentUsername] = useState<string | null>(null)
+  const [confirmResign, setConfirmResign] = useState(false)
+  const [confirmOfferDraw, setConfirmOfferDraw] = useState(false)
+  const [confirmAcceptDraw, setConfirmAcceptDraw] = useState(false)
 
   const chessRef = useRef(new Chess())
   const wsRef = useRef<GameWsClient | null>(null)
@@ -91,6 +94,7 @@ export function GamePage() {
       ws.close()
       wsRef.current = null
     }
+    // Intentionally omit state?.moves?.length: we sync once per gameId+token; full state arrives via GAME_STATE or SYNC response.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, token])
 
@@ -125,22 +129,7 @@ export function GamePage() {
 
     if (msg.type === 'GAME_STATE') {
       setError(null)
-      const gs = msg as Extract<WsServerMessage, { type: 'GAME_STATE' }>
-      const st: GameState = {
-        gameId: String(gs.gameId),
-        whiteId: String(gs.whiteId),
-        blackId: String(gs.blackId),
-        fen: gs.fen,
-        moves: (gs.moves ?? []).map((m) => ({
-          ply: m.ply,
-          uci: m.uci,
-          san: m.san ?? null,
-        })),
-        clocks: gs.clocks ? { whiteMs: gs.clocks.whiteMs, blackMs: gs.clocks.blackMs } : null,
-        status: gs.status ?? null,
-        sideToMove: gs.sideToMove ?? null,
-      }
-      applyFullState(st)
+      applyFullState(wsMessageToGameState(msg as Extract<WsServerMessage, { type: 'GAME_STATE' }>))
       return
     }
 
@@ -251,26 +240,41 @@ export function GamePage() {
     return true
   }
 
-  async function onResign() {
+  async function doResign() {
     if (!gameId) return
-    if (!window.confirm('Resign the game?')) return
-    const st = await resign(gameId)
-    applyFullState(st)
+    try {
+      const st = await resign(gameId)
+      applyFullState(st)
+    } catch (e: unknown) {
+      setError(getErrorMessage(e) || 'Failed to resign')
+    }
   }
 
-  async function onOfferDraw() {
+  async function doOfferDraw() {
     if (!gameId) return
-    if (!window.confirm('Offer a draw?')) return
-    const st = await offerDraw(gameId)
-    applyFullState(st)
+    try {
+      const st = await offerDraw(gameId)
+      applyFullState(st)
+    } catch (e: unknown) {
+      setError(getErrorMessage(e) || 'Failed to offer draw')
+    }
   }
 
-  async function onAcceptDraw() {
+  async function doAcceptDraw() {
     if (!gameId) return
-    if (!window.confirm('Accept draw?')) return
-    const st = await acceptDraw(gameId)
-    applyFullState(st)
+    try {
+      const st = await acceptDraw(gameId)
+      applyFullState(st)
+    } catch (e: unknown) {
+      setError(getErrorMessage(e) || 'Failed to accept draw')
+    }
   }
+
+  const drawOfferedByOpponent =
+    state?.status === 'RUNNING' &&
+    opponentId != null &&
+    state.drawOfferedBy != null &&
+    String(state.drawOfferedBy) === opponentId
 
   if (!gameId) return null
 
@@ -290,11 +294,38 @@ export function GamePage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr_1fr]">
+      <ConfirmModal
+        open={confirmResign}
+        onClose={() => setConfirmResign(false)}
+        onConfirm={doResign}
+        title="Resign the game?"
+        message="You will lose this game. This cannot be undone."
+        confirmLabel="Resign"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
+      <ConfirmModal
+        open={confirmOfferDraw}
+        onClose={() => setConfirmOfferDraw(false)}
+        onConfirm={doOfferDraw}
+        title="Offer a draw?"
+        message="Your opponent will be able to accept or decline."
+        confirmLabel="Offer draw"
+        cancelLabel="Cancel"
+      />
+      <ConfirmModal
+        open={confirmAcceptDraw}
+        onClose={() => setConfirmAcceptDraw(false)}
+        onConfirm={doAcceptDraw}
+        title="Accept draw?"
+        message="The game will end in a draw."
+        confirmLabel="Accept"
+        cancelLabel="Decline"
+      />
       <div className="space-y-4">
         <Card>
           <div className="text-sm text-slate-400">Opponent</div>
-          <div className="mt-1 font-medium">{opponentUsername || opponentId || '—'}</div>
-          <div className="mt-2 text-xs text-slate-500">gameId: {gameId}</div>
+          <div className="mt-1 font-medium">{opponentUsername || 'Opponent'}</div>
         </Card>
 
         <Card>
@@ -304,10 +335,12 @@ export function GamePage() {
         </Card>
 
         <Card className="space-y-2">
-          <Button
-            variant="danger"
-            className="w-full"
-            onClick={onResign}
+          {state?.status === 'RUNNING' && (
+            <>
+              <Button
+                variant="danger"
+                className="w-full"
+                onClick={() => setConfirmResign(true)}
             aria-label="Resign the game"
             type="button"
           >
@@ -316,32 +349,44 @@ export function GamePage() {
           <Button
             variant="secondary"
             className="w-full"
-            onClick={onOfferDraw}
+            onClick={() => setConfirmOfferDraw(true)}
             aria-label="Offer a draw to your opponent"
             type="button"
           >
             Offer draw
           </Button>
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={onAcceptDraw}
-            aria-label="Accept your opponent’s draw offer"
-            type="button"
-          >
-            Accept draw
-          </Button>
+              {drawOfferedByOpponent && (
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setConfirmAcceptDraw(true)}
+                  aria-label="Accept draw offer"
+                  type="button"
+                >
+                  Accept draw
+                </Button>
+              )}
+            </>
+          )}
+          {state?.status === 'FINISHED' && (
+            <Link to="/lobby" className="block">
+              <Button variant="primary" className="w-full" type="button">
+                Back to Lobby
+              </Button>
+            </Link>
+          )}
         </Card>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="text-sm">
-            <span className="text-slate-400">WS:</span>{' '}
-            <span className={wsStatus === 'connected' ? 'text-emerald-400' : wsStatus === 'reconnecting' ? 'text-amber-400' : 'text-red-400'}>
-              {wsStatus}
-            </span>
-          </div>
+          {wsStatus !== 'connected' ? (
+            <div className="text-sm">
+              <span className={wsStatus === 'reconnecting' ? 'text-amber-400' : 'text-red-400'}>
+                {wsStatus === 'reconnecting' ? 'Reconnecting…' : 'Connection lost. Reconnecting…'}
+              </span>
+            </div>
+          ) : null}
           <div className="text-sm text-slate-300">{state?.status === 'FINISHED' ? `Finished: ${state?.result ?? ''} (${state?.finishReason ?? ''})` : state?.sideToMove ? `${state.sideToMove} to move` : ''}</div>
         </div>
 

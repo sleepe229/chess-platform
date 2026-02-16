@@ -337,6 +337,7 @@ public class GameEventsListener {
                 .clocks(state.getClocks())
                 .status(state.getStatus())
                 .sideToMove(state.getSideToMove())
+                .drawOfferedBy(state.getDrawOfferedBy())
                 .build();
     }
 

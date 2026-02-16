@@ -25,5 +25,6 @@ public class WsGameStateMessage {
     private GameClocksMessage clocks;
     private String status;
     private String sideToMove;
+    private UUID drawOfferedBy;
 }
 

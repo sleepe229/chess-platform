@@ -10,6 +10,7 @@ import { GamePage } from './features/game/GamePage'
 import { GamesPage } from './features/history/GamesPage'
 import { GameReviewPage } from './features/history/GameReviewPage'
 import { ErrorBoundary } from './shared/ErrorBoundary'
+import { NotFoundPage } from './shared/NotFoundPage'
 
 export default function App() {
   return (
@@ -64,7 +65,7 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/lobby" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </AuthGate>

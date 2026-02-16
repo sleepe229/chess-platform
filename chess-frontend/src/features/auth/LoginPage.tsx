@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { login } from './authApi'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
@@ -8,10 +8,12 @@ import { getErrorMessage } from '../../shared/utils/getErrorMessage'
 
 export function LoginPage() {
   const nav = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const from = (location.state as { from?: string } | null)?.from ?? '/lobby'
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,7 +21,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       await login(email.trim(), password)
-      nav('/lobby', { replace: true })
+      nav(from, { replace: true })
     } catch (e: unknown) {
       setError(getErrorMessage(e) || 'Login failed')
     } finally {

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { Chessboard } from 'react-chessboard'
 import { Card } from '../../shared/ui/Card'
 import { Button } from '../../shared/ui/Button'
-import { getGameState, type GameState } from '../game/gameApi'
+import { getGameState, STARTING_FEN, type GameState } from '../game/gameApi'
 import { getErrorMessage } from '../../shared/utils/getErrorMessage'
 
 export function GameReviewPage() {
@@ -31,8 +31,8 @@ export function GameReviewPage() {
   }, [gameId])
 
   const fenAtIdx = useMemo(() => {
-    if (!state) return 'start'
-    if (idx <= 0) return 'start'
+    if (!state) return STARTING_FEN
+    if (idx <= 0) return STARTING_FEN
     const last = state.moves[Math.min(idx, state.moves.length) - 1]
     return last?.fenAfter || state.fen
   }, [state, idx])
@@ -69,26 +69,22 @@ export function GameReviewPage() {
           <Chessboard options={{ position: fenAtIdx, allowDragging: false }} />
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <Button variant="secondary" onClick={() => setIdx(0)} disabled={!state}>
-            {'<<'}
+        <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+          <Button variant="secondary" onClick={() => setIdx(0)} disabled={!state} aria-label="Start">
+            Start
           </Button>
-          <Button variant="secondary" onClick={() => setIdx((v) => Math.max(0, v - 1))} disabled={!state}>
-            {'<'}
+          <Button variant="secondary" onClick={() => setIdx((v) => Math.max(0, v - 1))} disabled={!state} aria-label="Previous move">
+            Prev
           </Button>
-          <div className="text-sm text-slate-300 tabular-nums">
-            {idx} / {state?.moves.length ?? 0}
+          <div className="text-sm text-slate-300 tabular-nums px-2">
+            Move {idx} of {state?.moves.length ?? 0}
           </div>
-          <Button variant="secondary" onClick={() => setIdx((v) => Math.min((state?.moves.length ?? 0), v + 1))} disabled={!state}>
-            {'>'}
+          <Button variant="secondary" onClick={() => setIdx((v) => Math.min((state?.moves.length ?? 0), v + 1))} disabled={!state} aria-label="Next move">
+            Next
           </Button>
-          <Button variant="secondary" onClick={() => setIdx(state?.moves.length ?? 0)} disabled={!state}>
-            {'>>'}
+          <Button variant="secondary" onClick={() => setIdx(state?.moves.length ?? 0)} disabled={!state} aria-label="End">
+            End
           </Button>
-        </div>
-
-        <div className="mt-4 text-xs text-slate-500">
-          Analysis endpoint is not implemented in backend yet (no <span className="font-mono">/analysis</span> controller), so this page is a pure viewer for now.
         </div>
       </Card>
 

@@ -23,5 +23,6 @@ public class GameStateResponse {
     private String sideToMove;
     private String result;
     private String finishReason;
+    private UUID drawOfferedBy;
 }
 

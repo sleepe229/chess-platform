@@ -29,6 +29,7 @@ export function ProfilePage() {
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!meQuery.data) return
@@ -61,6 +62,8 @@ export function ProfilePage() {
       setMe(useAuthStore.getState().me)
       await meQuery.refetch()
       await ratingsQuery.refetch()
+      setSaved(true)
+      window.setTimeout(() => setSaved(false), 3000)
     } catch (e: unknown) {
       setError(getErrorMessage(e) || 'Failed to save profile')
     } finally {
@@ -90,6 +93,7 @@ export function ProfilePage() {
           </label>
 
           {error ? <div className="text-sm text-red-400">{error}</div> : null}
+          {saved ? <div className="text-sm text-emerald-400">Saved.</div> : null}
 
           <Button onClick={onSave} disabled={saving} className="w-full">
             {saving ? 'Saving…' : 'Save'}
@@ -116,9 +120,6 @@ export function ProfilePage() {
           })}
         </div>
 
-        <div className="mt-4 text-xs text-slate-500">
-          Data source: <span className="font-mono">GET /v1/users/&lt;id&gt;/ratings</span>
-        </div>
       </Card>
     </div>
   )

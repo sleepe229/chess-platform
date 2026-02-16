@@ -272,6 +272,12 @@ services:
       dockerfile: chess-api-gateway/Dockerfile
     container_name: chess-api-gateway
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       JWT_SECRET: ${JWT_SECRET}
@@ -320,6 +326,6 @@ services:
       - "3000:80"
     depends_on:
       chess-api-gateway:
-        condition: service_started
+        condition: service_healthy
     networks:
       - chess-network

@@ -129,9 +129,22 @@ public class GameService {
                 .byUserId(m.getByUserId())
                 .build()).toList());
 
+        setSideToMoveFromFen(state);
+
         stateStore.put(state, Duration.ofSeconds(activeTtlSeconds));
         updateTimeoutIndex(state);
         return state;
+    }
+
+    private void setSideToMoveFromFen(GameState state) {
+        if (state.getFen() == null || state.getFen().isBlank()) return;
+        try {
+            Board board = new Board();
+            board.loadFromFen(state.getFen());
+            state.setSideToMove(board.getSideToMove().name());
+        } catch (Exception e) {
+            log.warn("Failed to parse FEN for sideToMove, gameId={}", state.getGameId(), e);
+        }
     }
 
     public void onMatchFound(MatchFoundEvent event) {
@@ -166,11 +179,13 @@ public class GameService {
                 .build();
         gameRepository.save(entity);
 
+        Board startBoard = new Board();
         GameState state = GameState.builder()
                 .gameId(gameId)
                 .whiteId(whiteId)
                 .blackId(blackId)
                 .fen(startFen)
+                .sideToMove(startBoard.getSideToMove().name())
                 .clocks(GameClocks.builder()
                         .whiteMs(baseMs)
                         .blackMs(baseMs)
@@ -270,6 +285,7 @@ public class GameService {
                     .build();
             state.getMoves().add(gm);
             state.setFen(board.getFen());
+            state.setSideToMove(board.getSideToMove().name());
 
             // Persist move and runtime snapshot
             GameEntity entity = gameRepository.findById(gameId).orElseThrow(() -> new NotFoundException("Game not found"));

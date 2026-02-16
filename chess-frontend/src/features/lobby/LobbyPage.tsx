@@ -151,7 +151,7 @@ export function LobbyPage() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-200">
+          <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
             <input type="checkbox" checked={rated} onChange={(e) => setRated(e.target.checked)} />
             Rated
           </label>
@@ -173,7 +173,6 @@ export function LobbyPage() {
                   Cancel
                 </Button>
               </div>
-              {requestId ? <div className="mt-2 text-xs text-slate-500">requestId: {requestId}</div> : null}
             </div>
           )}
         </div>
@@ -188,9 +187,6 @@ export function LobbyPage() {
           <div className="mt-1">
             <span className="text-slate-400">User ID:</span> <span className="font-mono">{me?.userId || '—'}</span>
           </div>
-        </div>
-        <div className="mt-4 text-xs text-slate-500">
-          Notes: matchmaking is REST-driven (join + polling status), per the spec.
         </div>
       </Card>
     </div>

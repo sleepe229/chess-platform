@@ -12,7 +12,8 @@ FROM bellsoft/liberica-openjre-alpine:21-cds
 
 VOLUME /tmp
 
-RUN adduser -S spring-user
+RUN apk add --no-cache curl \
+    && adduser -S spring-user
 USER spring-user
 
 WORKDIR /application
