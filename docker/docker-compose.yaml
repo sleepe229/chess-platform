@@ -7,6 +7,7 @@ volumes:
   postgres-user-data:
   postgres-game-data:
   postgres-matchmaking-data:
+  postgres-analytics-data:
   redis-data:
 
 services:
@@ -74,6 +75,24 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
       - postgres-matchmaking-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chess-network
+
+  postgres-analytics:
+    image: postgres:17-alpine
+    container_name: chess-postgres-analytics
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chess_analytics
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres-analytics-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
       interval: 10s
@@ -256,12 +275,21 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-analytics:${DB_PORT:-5432}/chess_analytics
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       JWT_SECRET: ${JWT_SECRET}
       NATS_URL: ${NATS_URL}
     ports:
-      - "${ANALYTICS_SERVICE_PORT}:8086"
+      - "${ANALYTICS_SERVICE_PORT:-8086}:8086"
     depends_on:
+      postgres-analytics:
+        condition: service_healthy
       nats:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - chess-network
