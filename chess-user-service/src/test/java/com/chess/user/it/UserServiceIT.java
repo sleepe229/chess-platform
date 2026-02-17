@@ -111,7 +111,8 @@ class UserServiceIT {
                 .uri("/internal/users")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .body(Map.of("userId", userId.toString(), "email", email))
-                .retrieve();
+                .retrieve()
+                .toBodilessEntity();
 
         var second = rc.post()
                 .uri("/internal/users")
