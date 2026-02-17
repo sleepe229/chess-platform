@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.HttpClientErrorException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers
 @ActiveProfiles("it")
@@ -111,16 +113,17 @@ class UserServiceIT {
                 .uri("/internal/users")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .body(Map.of("userId", userId.toString(), "email", email))
-                .retrieve();
+                .retrieve()
+                .toBodilessEntity();
 
-        var second = rc.post()
+        assertThatThrownBy(() -> rc.post()
                 .uri("/internal/users")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .body(Map.of("userId", userId.toString(), "email", email))
                 .retrieve()
-                .toEntity(String.class);
-
-        assertThat(second.getStatusCode().value()).isEqualTo(409);
+                .toEntity(String.class))
+                .isInstanceOf(HttpClientErrorException.Conflict.class)
+                .satisfies(ex -> assertThat(((HttpClientErrorException) ex).getStatusCode().value()).isEqualTo(409));
     }
 
     @Test
